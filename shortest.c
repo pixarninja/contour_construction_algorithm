@@ -15,8 +15,10 @@ struct point_t {
 void swap(struct point_t *x, struct point_t *y);
 void permute(struct point_t *point, struct point_t *shortest, int index, int n);
 double distance(struct point_t *point, int first, int last);
+int factorial(int n);
 
 char global[9] = {'\0'};
+int global_count = 0;
 
 int main(void)
 {
@@ -63,6 +65,8 @@ int main(void)
     /* fills array with permutations */
     permute(point, shortest, start, n);
     printf("\n");
+    printf("n! = %d\n", factorial(SIZE));
+    printf("Total Permutations: %d\n\n", global_count);
     printf("Shortest Path: %s\n", global);
     printf("Distance: %lf\n", shortest[0].curr);
     printf("\n");
@@ -93,6 +97,7 @@ void permute(struct point_t *point, struct point_t *shortest, int index, int n)
     double segment = 0;
     /* base case */
     if(index == n) {
+	global_count++;
         /* calculating distance of segments from start to end */
         for(i = 0; i < n; i++) {
             segment = distance(point, i, i + 1);
@@ -135,4 +140,15 @@ double distance(struct point_t *point, int first, int last)
     double y_2 = point[last].y;
     double dist = sqrt((x_2 - x_1)*(x_2 - x_1)+(y_2 - y_1)*(y_2 - y_1));
     return dist;
+}
+
+/* calculates factorial of an integer */
+int factorial(int n)
+{
+    int result = 1;
+    int i = 2;
+    for(; i <= n; i++) {
+        result *= i;
+    }
+    return result;
 }
