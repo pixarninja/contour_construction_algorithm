@@ -49,9 +49,9 @@ int main(void)
     point[2].y = 4;
     point[2].pt = 'C';
     point[2].curr = DBL_MAX;
-    /* D(2,-1) */
-    point[3].x = 2;
-    point[3].y = -1;
+    /* D(-1,2) */
+    point[3].x = -1;
+    point[3].y = 2;
     point[3].pt = 'D';
     point[3].curr = DBL_MAX;
     /* E(-2,-2) */
@@ -151,6 +151,7 @@ double distance(struct point_t *point, int first, int last)
     double x_2 = point[last].x;
     double y_2 = point[last].y;
     double dist = sqrt((x_2 - x_1)*(x_2 - x_1)+(y_2 - y_1)*(y_2 - y_1));
+    printf(" %lf ", dist);
     return dist;
 }
 
