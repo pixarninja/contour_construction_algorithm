@@ -10,6 +10,7 @@ struct point_t {
     double y;
     char pt;
     double curr;
+    char shortest[9];
 } point;
 
 void swap(struct point_t *x, struct point_t *y);
@@ -17,13 +18,19 @@ void permute(struct point_t *point, struct point_t *shortest, int index, int n);
 double distance(struct point_t *point, int first, int last);
 int factorial(int n);
 
-char global[9] = {'\0'};
+//char global[9] = {'\0'};
 int global_count = 0;
 
 int main(void)
 {
     struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
     struct point_t *shortest = malloc(sizeof(struct point_t) * SIZE);
+    int i = 0;
+    int j = 0;
+    for(; i <= (SIZE - 1); i++) {
+        for(; j <= 9; j++)
+        point[i].shortest[j] = '\0';
+    }
     shortest = point;
     int start = 0;
     int n = SIZE - 1;
@@ -67,7 +74,7 @@ int main(void)
     printf("\n");
     printf("n! = %d\n", factorial(SIZE));
     printf("Total Permutations: %d\n\n", global_count);
-    printf("Shortest Path: %s\n", global);
+    printf("Shortest Path: %s\n", point[0].shortest);
     printf("Distance: %lf\n", shortest[0].curr);
     printf("\n");
     return 0;
@@ -97,26 +104,31 @@ void permute(struct point_t *point, struct point_t *shortest, int index, int n)
     double segment = 0;
     /* base case */
     if(index == n) {
-	global_count++;
+        global_count++;
         /* calculating distance of segments from start to end */
+        printf("%c", point[n].pt);
         for(i = 0; i < n; i++) {
             segment = distance(point, i, i + 1);
-	    //printf("%c", point[i].pt);
+            printf("%c", point[i].pt);
             total += segment;
         }
         /* calculating the final segment (start and end nodes) */
         segment = distance(point, n, 0);
         total += segment;
-	//printf("%c", point[n].pt);
+        printf("%c: %lf\n", point[n].pt, total);
         /* checking to see if the most recent total is less than
            the current shortest length */
         if(total < curr) {
             point[0].curr = total;
-            shortest = point;
-            global[0] = shortest[n].pt;
+            /* storing new shortest path
+               -- workaround for using the global variable
+               global[0] = shortest[n].pt;
+               global[i + 1] = shortest[i].pt; */
+            point[0].shortest[0] = point[n].pt;
             for(i = 0; i <= n; i++) {
-                global[i + 1] = shortest[i].pt;
+                point[0].shortest[i + 1] = point[i].pt;
             }
+            shortest = point;
             //printf("Calculated Path: %s\n", global);
             //printf("Distance: %lf\n", shortest[0].curr);
             curr = total;
