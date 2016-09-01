@@ -39,47 +39,56 @@ int main(void)
     struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
     struct point_t *shortest = malloc(sizeof(struct point_t) * SIZE);
     struct vector_t T0;
+    T0.point[0].x = 0.0;
+    T0.point[0].y = 0.0;
+    T0.point[0].pt = 'T';
+    T0.point[1].x = 0.0;
+    T0.point[1].y = 1.0;
+    T0.point[1].pt = 'T';
+    T0.i = 0.0;
+    T0.j = 1.0;
+    T0.length = 1;
     shortest = point;
     int start = 0;
-    int n = SIZE - 1;
+    int size = SIZE - 1;
     double total = 0;
-    /* A(0,2) */
-    point[0].x = 0;
-    point[0].y = 2;
-    point[0].pt = 'A';
-    point[0].tao_d = DBL_MAX;
-    /* B(2,2) */
-    point[1].x = 2;
-    point[1].y = 2;
-    point[1].pt = 'B';
-    point[1].tao_d = DBL_MAX;
-    /* C(2,4) */
-    point[2].x = 2;
-    point[2].y = 4;
-    point[2].pt = 'C';
-    point[2].tao_d = DBL_MAX;
-    /* D(-1,2) */
-    point[3].x = -1;
-    point[3].y = 2;
-    point[3].pt = 'D';
-    point[3].tao_d = DBL_MAX;
-    /* E(-2,-2) */
-    point[4].x = -2;
-    point[4].y = -2;
-    point[4].pt = 'E';
-    point[4].tao_d = DBL_MAX;
-    /* F(0,-3) */
-    point[5].x = 0;
-    point[5].y = -3;
-    point[5].pt = 'F';
-    point[5].tao_d = DBL_MAX;
     /* O(0,0) */
+    point[0].x = 0;
+    point[0].y = 0;
+    point[0].pt = 'O';
+    point[0].tao_d = DBL_MAX;
+    /* A(0,2) */
+    point[1].x = 0;
+    point[1].y = 2;
+    point[1].pt = 'A';
+    point[1].tao_d = DBL_MAX;
+    /* B(2,2) */
+    point[2].x = 2;
+    point[2].y = 2;
+    point[2].pt = 'B';
+    point[2].tao_d = DBL_MAX;
+    /* C(2,4) */
+    point[3].x = 2;
+    point[3].y = 4;
+    point[3].pt = 'C';
+    point[3].tao_d = DBL_MAX;
+    /* D(-1,2) */
+    point[4].x = -1;
+    point[4].y = 2;
+    point[4].pt = 'D';
+    point[4].tao_d = DBL_MAX;
+    /* E(-2,-2) */
+    point[5].x = -2;
+    point[5].y = -2;
+    point[5].pt = 'E';
+    point[5].tao_d = DBL_MAX;
+    /* F(0,-3) */
     point[6].x = 0;
-    point[6].y = 0;
-    point[6].pt = 'O';
+    point[6].y = -3;
+    point[6].pt = 'F';
     point[6].tao_d = DBL_MAX;
     /* runs tao-distance algorithm on data */
-    total = shortest_path(point[start], start, T0, point + 1, n);
+    total = shortest_path(point[start], start, T0, point + 1, size);
     printf("\n");
     printf("Total Permutations: %d\n\n", global_count);
     printf("Shortest Path: %s\n", "derp");
@@ -136,13 +145,14 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
         /* initializing tao */
         k.tao = ((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j));
         /* calculating tao-distance */
+        printf("%c --> %c: %lf, ", k.V.point[0].pt, k.V.point[1].pt, k.tao);
         total += calculate_tao_distance(k.tao, k.V.length);
         global_count++;
         printf("%lf\n", total);
         return total;
     }
     else {
-        i = n + 1;
+        i = n;
         for(; i < size; i++) {
             /* initializing structure k
                -- initializing vector V */
@@ -169,6 +179,7 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
             k.T2.length = 1;
             /* -- initializing tao */
             k.tao = ((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j));
+            printf("%c --> %c: %lf, ", k.V.point[0].pt, k.V.point[1].pt, k.tao);
             /* calculating tao-distance */
             curr[i].tao_d = calculate_tao_distance(k.tao, k.V.length);
         }
@@ -205,6 +216,7 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
 double calculate_tao_distance(double tao, double vector_length)
 {
     return ((M_PI * (atan(sqrt(tao)/sqrt(tao - 0.25))) * vector_length)/(90 * sqrt(tao - 0.25)));
+    //return ((M_PI * vector_length)/(90 * sqrt(tao - 0.25)));
 }
 
 /* calculates distance given two points */
