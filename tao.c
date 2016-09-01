@@ -8,21 +8,28 @@
 struct point_t {
     double x;
     double y;
+    double tao_d;
     char pt;
-    double curr;
-} point;
+};
 
 struct vector_t {
     struct point_t point[2];
-    double i_component;
-    double j_component;
     double length;
-} vector;
+    double i;
+    double j;
+};
 
-void swap(struct point_t *x, struct point_t *y);
-void permute(struct point_t *point, struct point_t *shortest, int index, int n);
-double distance(struct point_t *point, int first, int last);
-int factorial(int n);
+struct curvature_t {
+    struct vector_t T1;
+    struct vector_t T2;
+    struct vector_t V;
+    double tao;
+};
+
+double shortest_path(struct point_t start, int n, struct vector_t T1, struct point_t *search, int size);
+double calculate_tao_distance(double tao, double vector_length);
+double distance_p(struct point_t start, struct point_t end);
+double distance_v(struct vector_t start, struct vector_t end);
 
 char global_shortest[9] = {'\0'};
 int global_count = 0;
@@ -31,130 +38,191 @@ int main(void)
 {
     struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
     struct point_t *shortest = malloc(sizeof(struct point_t) * SIZE);
+    struct vector_t T0;
     shortest = point;
     int start = 0;
     int n = SIZE - 1;
+    double total = 0;
     /* A(0,2) */
     point[0].x = 0;
     point[0].y = 2;
     point[0].pt = 'A';
-    point[0].curr = DBL_MAX;
+    point[0].tao_d = DBL_MAX;
     /* B(2,2) */
     point[1].x = 2;
     point[1].y = 2;
     point[1].pt = 'B';
-    point[1].curr = DBL_MAX;
+    point[1].tao_d = DBL_MAX;
     /* C(2,4) */
     point[2].x = 2;
     point[2].y = 4;
     point[2].pt = 'C';
-    point[2].curr = DBL_MAX;
+    point[2].tao_d = DBL_MAX;
     /* D(-1,2) */
     point[3].x = -1;
     point[3].y = 2;
     point[3].pt = 'D';
-    point[3].curr = DBL_MAX;
+    point[3].tao_d = DBL_MAX;
     /* E(-2,-2) */
     point[4].x = -2;
     point[4].y = -2;
     point[4].pt = 'E';
-    point[4].curr = DBL_MAX;
+    point[4].tao_d = DBL_MAX;
     /* F(0,-3) */
     point[5].x = 0;
     point[5].y = -3;
     point[5].pt = 'F';
-    point[5].curr = DBL_MAX;
+    point[5].tao_d = DBL_MAX;
     /* O(0,0) */
     point[6].x = 0;
     point[6].y = 0;
     point[6].pt = 'O';
-    point[6].curr = DBL_MAX;
-    /* fills array with permutations */
-    permute(point, shortest, start, n);
+    point[6].tao_d = DBL_MAX;
+    /* runs tao-distance algorithm on data */
+    total = shortest_path(point[start], start, T0, point + 1, n);
     printf("\n");
     printf("Total Permutations: %d\n\n", global_count);
-    printf("Shortest Path: %s\n", global_shortest);
-    printf("Distance: %lf\n", shortest[0].curr);
+    printf("Shortest Path: %s\n", "derp");
+    printf("Distance: %lf\n", total);
     printf("\n");
     return 0;
 }
 
-/* Function to swap values at two pointers */
-void swap(struct point_t *x, struct point_t *y)
+/* calculates the shortest path */
+double shortest_path(struct point_t start, int n, struct vector_t T1, struct point_t *search, int size)
 {
-    struct point_t tmp;// = malloc(sizeof(struct point_t));
-    tmp.x = x->x;
-    tmp.y = x->y;
-    tmp.pt = x->pt;
-    x->x = y->x;
-    x->y = y->y;
-    x->pt = y->pt;
-    y->x = tmp.x;
-    y->y = tmp.y;
-    y->pt = tmp.pt;
-}
-
-/* calculates all permutations */
-void permute(struct point_t *point, struct point_t *shortest, int index, int n)
-{
-    int i = 0;
+    int i;
+    int j;
     double total = 0;
-    double curr = point[0].curr;
-    double segment = 0;
+    struct point_t best;
+    best.x = DBL_MAX;
+    best.y = DBL_MAX;
+    best.tao_d = DBL_MAX;
+    best.pt = '\0';
+    struct point_t *curr = malloc(sizeof(struct point_t) * size);
+    for(i = 0; i < size; i++) {
+        curr[i].x = DBL_MAX;
+        curr[i].y = DBL_MAX;
+        curr[i].tao_d = DBL_MAX;
+        curr[i].pt = '\0';
+    }
+    struct curvature_t k;
     /* base case */
-    if(index == n) {
+    if(n == size) {
+        i = n;
+        /* initializing structure k
+        -- initializing vector V */
+        k.V.point[0].x = start.x;
+        k.V.point[0].y = start.y;
+        k.V.point[0].pt = start.pt;
+        k.V.point[1].x = search[i].x;
+        k.V.point[1].y = search[i].y;
+        k.V.point[1].pt = search[i].pt;
+        k.V.i = k.V.point[1].x - k.V.point[0].x;
+        k.V.j = k.V.point[1].y - k.V.point[0].y;
+        k.V.length = distance_p(start, search[i]);
+        /* initializing vector T1 */
+        k.T1 = T1;
+        /* initializing vector T2 */
+        k.T2.point[0].x = k.V.point[0].x/k.V.length;
+        k.T2.point[0].y = k.V.point[0].y/k.V.length;
+        k.T2.point[0].pt = 'T';
+        k.T2.point[1].x = k.V.point[1].x/k.V.length;
+        k.T2.point[1].y = k.V.point[1].y/k.V.length;
+        k.T2.point[1].pt = 'T';
+        k.T2.i = k.V.i/k.V.length;
+        k.T2.j = k.V.j/k.V.length;
+        k.T2.length = 1;
+        /* initializing tao */
+        k.tao = ((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j));
+        /* calculating tao-distance */
+        total += calculate_tao_distance(k.tao, k.V.length);
         global_count++;
-        /* calculating distance of segments from start to end */
-        //printf("%c", point[n].pt);
-        for(i = 0; i < n; i++) {
-            segment = distance(point, i, i + 1);
-            //printf("%c", point[i].pt);
-            total += segment;
-        }
-        /* calculating the final segment (start and end nodes) */
-        segment = distance(point, n, 0);
-        total += segment;
-        //printf("%c: %lf\n", point[n].pt, total);
-        /* checking to see if the most recent total is less than
-           the current shortest length */
-        if(total < curr) {
-            point[0].curr = total;
-            /* storing new shortest path */
-            global_shortest[0] = shortest[n].pt;
-            for(i = 0; i <= n; i++) {
-            	global_shortest[i + 1] = shortest[i].pt;
-            }
-            shortest = point;
-            curr = total;
-        }
+        printf("%lf\n", total);
+        return total;
     }
     else {
-        for(i = index; i <= n; i++) {
-            swap(point+index, point+i);
-            permute(point, shortest, index+1, n);
-            swap(point+index, point+i); //backtrack
+        i = n + 1;
+        for(; i < size; i++) {
+            /* initializing structure k
+               -- initializing vector V */
+            k.V.point[0].x = start.x;
+            k.V.point[0].y = start.y;
+            k.V.point[0].pt = start.pt;
+            k.V.point[1].x = search[i].x;
+            k.V.point[1].y = search[i].y;
+            k.V.point[1].pt = search[i].pt;
+            k.V.i = k.V.point[1].x - k.V.point[0].x;
+            k.V.j = k.V.point[1].y - k.V.point[0].y;
+            k.V.length = distance_p(start, search[i]);
+            /* -- initializing vector T1 */
+            k.T1 = T1;
+            /* -- initializing vector T2 */
+            k.T2.point[0].x = k.V.point[0].x/k.V.length;
+            k.T2.point[0].y = k.V.point[0].y/k.V.length;
+            k.T2.point[0].pt = 'T';
+            k.T2.point[1].x = k.V.point[1].x/k.V.length;
+            k.T2.point[1].y = k.V.point[1].y/k.V.length;
+            k.T2.point[1].pt = 'T';
+            k.T2.i = k.V.i/k.V.length;
+            k.T2.j = k.V.j/k.V.length;
+            k.T2.length = 1;
+            /* -- initializing tao */
+            k.tao = ((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j));
+            /* calculating tao-distance */
+            curr[i].tao_d = calculate_tao_distance(k.tao, k.V.length);
         }
+        for(i = n + 1; i < size; i++) {
+            if(best.tao_d > curr[i].tao_d) {
+                best = curr[i];
+            }
+        }
+        total = best.tao_d;
+        /* remove pt for best_tao_d */
+        for(i = 0; i < size; i++) {
+            if(search[i].pt == best.pt) {
+                for(j = i; j < size; j++) {
+                    search[j] = search[j + 1];
+                }
+                break;
+            }
+        }
+        /* shifting T2 vector, to be T1 of next point */
+        k.T2.point[0].x = k.V.point[1].x;
+        k.T2.point[0].y = k.V.point[1].y;
+        /* -- calculating second point of T2 vector */
+        k.T2.point[1].x = k.V.point[1].x + k.T2.i;
+        k.T2.point[1].y = k.V.point[1].y + k.T2.j;
+        k.T2.length = 1;
+        total += shortest_path(best, n + 1, k.T2, search + 1, size - 1);
+        global_count++;
+        printf("%lf\n", total);
+        return total;
     }
 }
 
 /* calculates distance given index and structure */
-double distance(struct point_t *point, int first, int last)
+double calculate_tao_distance(double tao, double vector_length)
 {
-    double x_1 = point[first].x;
-    double y_1 = point[first].y;
-    double x_2 = point[last].x;
-    double y_2 = point[last].y;
-    double dist = sqrt((x_2 - x_1)*(x_2 - x_1)+(y_2 - y_1)*(y_2 - y_1));
-    return dist;
+    return ((M_PI * (atan(sqrt(tao)/sqrt(tao - 0.25))) * vector_length)/(90 * sqrt(tao - 0.25)));
 }
 
-/* calculates factorial of an integer */
-int factorial(int n)
+/* calculates distance given two points */
+double distance_p(struct point_t start, struct point_t end)
 {
-    int result = 1;
-    int i = 2;
-    for(; i <= n; i++) {
-        result *= i;
-    }
-    return result;
+    double x_1 = start.x;
+    double y_1 = start.y;
+    double x_2 = end.x;
+    double y_2 = end.y;
+    return sqrt((x_2 - x_1)*(x_2 - x_1)+(y_2 - y_1)*(y_2 - y_1));
+}
+
+/* calculates distance given two vectors */
+double distance_v(struct vector_t start, struct vector_t end)
+{
+    double i_1 = start.i;
+    double j_1 = start.j;
+    double i_2 = end.i;
+    double j_2 = end.j;
+    return sqrt((i_2 - i_1)*(i_2 - i_1)+(j_2 - j_1)*(j_2 - j_1));
 }
