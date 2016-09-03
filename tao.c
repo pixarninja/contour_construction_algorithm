@@ -24,13 +24,16 @@ struct curvature_t {
     struct vector_t T2;
     struct vector_t V;
     double tao;
+    double theta;
+    double curvature;
 };
 
 int global_count = 0;
 
-double shortest_path(struct point_t start, int n, struct vector_t T1, struct point_t *search, int size);
-//double calculate_tao_distance(double tao, double vector_length);
-double calculate_tao_distance(struct curvature_t k);
+double shortest_path(struct point_t start, int n, struct point_t *search, int size);
+double calculate_theta(struct curvature_t k);
+double calculate_curvature(struct curvature_t k);
+double tao_distance(struct curvature_t k);
 double distance_p(struct point_t start, struct point_t end);
 double distance_v(struct vector_t start, struct vector_t end);
 double length_v(struct vector_t v);
@@ -41,16 +44,6 @@ int main(void)
 {
     struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
     struct point_t *shortest = malloc(sizeof(struct point_t) * SIZE);
-    struct vector_t T0;
-    T0.point[0].x = 0.0;
-    T0.point[0].y = 0.0;
-    T0.point[0].pt = 'T';
-    T0.point[1].x = 0.0;
-    T0.point[1].y = 1.0;
-    T0.point[1].pt = 'T';
-    T0.i = 0.0;
-    T0.j = 1.0;
-    T0.length = 1;
     shortest = point;
     int start = 0;
     int size = SIZE - 1;
@@ -91,7 +84,7 @@ int main(void)
     point[0].pt = 'F';
     point[0].tao_d = DBL_MAX;
     /* runs tao-distance algorithm on data */
-    total = shortest_path(point[start], start, T0, point, size);
+    total = shortest_path(point[start], start, point, size);
     printf("\n");
     printf("Total Permutations: %d\n\n", global_count);
     printf("Shortest Path: %s\n", "derp");
@@ -101,13 +94,161 @@ int main(void)
 }
 
 /* calculates the shortest path */
-double shortest_path(struct point_t start, int n, struct vector_t T1, struct point_t *search, int size)
+double shortest_path(struct point_t start, int n, struct point_t *search, int size)
+{
+    int i;
+    int j;
+    int count = 0;
+    int total_size = size;
+    double theta = 0;
+    double curvature = 0;
+    double total = 0;
+    struct point_t best;
+    best.x = DBL_MAX;
+    best.y = DBL_MAX;
+    best.tao_d = DBL_MAX;
+    best.pt = '\0';
+    /* remove start pt from search */
+    for(i = 0; i <= size; i++) {
+        if(search[i].pt == start.pt) {
+            for(j = i; j < size; j++) {
+                search[j] = search[j + 1];
+            }
+            break;
+        }
+    }
+    size--;
+    /* initializing structure curr */
+    struct point_t *curr = malloc(sizeof(struct point_t) * size);
+    for(i = 0; i <= size; i++) {
+        curr[i].x = DBL_MAX;
+        curr[i].y = DBL_MAX;
+        curr[i].tao_d = DBL_MAX;
+        curr[i].pt = '\0';
+    }
+    struct vector_t T1;
+    T1.point[0].x = start.x;
+    T1.point[0].y = start.y;
+    T1.point[0].pt = start.pt;
+    T1.point[1].x = start.x + 0.0;
+    T1.point[1].y = start.y + 1.0;
+    T1.point[1].pt = 'T';
+    T1.i = 0.0;
+    T1.j = 1.0;
+    T1.length = 1;
+    struct curvature_t k;
+    /* initializing point 1 data for structure k
+    -- initializing vector V */
+    k.V.point[0].x = start.x;
+    k.V.point[0].y = start.y;
+    k.V.point[0].pt = start.pt;
+    k.V.i = 0;
+    k.V.j = 0;
+    k.V.length = 0;
+    /* -- initializing vector T1 */
+    k.T1 = T1;
+    /* -- initializing vector T2 */
+    k.T2.point[0].x = start.x;
+    k.T2.point[0].y = start.y;
+    k.T2.point[0].pt = start.pt;
+    /* normalizes n, if n is not already an index within the new size */
+    n %= total_size;
+    /* outer loop, calculates total distance */
+    while(global_count <= total_size) {
+        i = 0;
+        /* refreshing best pt */
+        best.tao_d = DBL_MAX;
+        /* loops through all possible pts from start */
+        while(count <= size) {
+            /* initializing point 2 data for structure k
+               -- initializing vector V */
+            k.V.point[1].x = search[i].x;
+            k.V.point[1].y = search[i].y;
+            k.V.point[1].pt = search[i].pt;
+            k.V.i = k.V.point[1].x - k.V.point[0].x;
+            k.V.j = k.V.point[1].y - k.V.point[0].y;
+            k.V.length = length_v(k.V);
+            /* -- initializing vector T2 */
+            k.T2.point[1].x = k.V.point[1].x;
+            k.T2.point[1].y = k.V.point[1].y;
+            k.T2.point[1].pt = 'T';
+            k.T2.i = (k.T2.point[1].x - k.T2.point[0].x) / k.V.length;
+            k.T2.j = (k.T2.point[1].y - k.T2.point[0].y) / k.V.length;
+            k.T2.point[1].x = k.V.point[0].x + k.T2.i;
+            k.T2.point[1].y = k.V.point[0].y + k.T2.j;
+            k.T2.length = length_v(k.T2);
+            /* -- initializing tao, theta, and curvature */
+            k.tao = (dot_product(k.T1, k.T2) / (length_v(k.T1) * length_v(k.T2)));
+            k.theta = calculate_theta(k);
+            k.curvature = calculate_curvature(k);
+            /* initializing structure curr */
+            curr[i].x = k.V.point[1].x;
+            curr[i].y = k.V.point[1].y;
+            curr[i].pt = k.V.point[1].pt;
+            /* calculating tao-distance */
+            curr[i].tao_d = tao_distance(k);
+            print_k(k);
+            i++;
+            count++;
+        }
+        /* find point with the lowest tao-distance */
+        for(i = 0; i <= size; i++) {
+            if(best.tao_d > curr[i].tao_d) {
+                best.x = curr[i].x;
+                best.y = curr[i].y;
+                best.pt = curr[i].pt;
+                best.tao_d = curr[i].tao_d;
+                n = i;
+            }
+        }
+        printf("\nChosen path: %c --> %c \n\n", k.V.point[0].pt, best.pt);
+        /* remove chosen point from search array */
+        for(i = n; i < size; i++) {
+            search[i].x = search[i + 1].x;
+            search[i].y = search[i + 1].y;
+            search[i].pt = search[i + 1].pt;
+            search[i].tao_d = search[i + 1].tao_d;
+        }
+        size--;
+        /* shift starting point to best point */
+        start = best;
+        /* reinitializing structure k
+           -- initializing vector V */
+        k.V.point[0].x = start.x;
+        k.V.point[0].y = start.y;
+        k.V.point[0].pt = start.pt;
+        k.V.i = 0;
+        k.V.j = 0;
+        k.V.length = 0;
+        /* -- initializing vector T1 */
+        k.T1.point[0].x = k.V.point[0].x;
+        k.T1.point[0].y = k.V.point[0].y;
+        k.T1.point[0].pt = k.V.point[0].pt;
+        k.T1.point[1].x = k.V.point[1].x + k.T2.i;
+        k.T1.point[1].y = k.V.point[1].y + k.T2.j;
+        k.T1.point[1].pt = 'T';
+        /* -- initializing vector T2 */
+        k.T2.point[0].x = start.x;
+        k.T2.point[0].y = start.y;
+        k.T2.point[0].pt = start.pt;
+        /* normalizes n, if n is not already an index within the new size */
+        n %= total_size;
+        count = 0;
+        global_count++;
+    }
+    return total;
+}
+
+/* calculates the shortest path */
+double old_shortest_path(struct point_t start, int n, struct vector_t T1, struct point_t *search, int size)
 {
     int i;
     int j;
     int count = 0;
     int total_size = size;
     char shortest[9] = {'\0'};
+    double theta = 0;
+    double curvature = 0;
     double total = 0;
     struct point_t best;
     best.x = DBL_MAX;
@@ -137,14 +278,15 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
     k.V.point[0].x = start.x;
     k.V.point[0].y = start.y;
     k.V.point[0].pt = start.pt;
-    k.V.point[1].x = start.x;
-    k.V.point[1].y = start.y;
-    k.V.point[1].pt = start.pt;
     k.V.i = 0;
     k.V.j = 0;
     k.V.length = 0;
     /* -- initializing vector T1 */
     k.T1 = T1;
+    /* -- initializing vector T2 */
+    k.T2.point[0].x = start.x;
+    k.T2.point[0].y = start.y;
+    k.T2.point[0].pt = 'T';
     /* normalizes n, if n is not already an index of start */
     n %= total_size;
     /* outer loop, calculates total distance */
@@ -164,17 +306,15 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
             k.V.j = k.V.point[1].y - k.V.point[0].y;
             k.V.length = length_v(k.V);
             /* -- initializing vector T2 */
-            k.T2.point[0].x = k.V.point[0].x/k.V.length;
-            k.T2.point[0].y = k.V.point[0].y/k.V.length;
-            k.T2.point[0].pt = 'T';
             k.T2.point[1].x = k.V.point[1].x/k.V.length;
             k.T2.point[1].y = k.V.point[1].y/k.V.length;
             k.T2.point[1].pt = 'T';
             k.T2.i = k.V.i/k.V.length;
             k.T2.j = k.V.j/k.V.length;
             k.T2.length = length_v(k.T2);
+            //printf("New Data: ");
+            //print_k(k);
             /* -- initializing tao */
-            //k.tao = ((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j));
             k.tao = (dot_product(k.T1, k.T2) / (length_v(k.T1) * length_v(k.T2)));
             /* debug for tao less than 1 */
             //k.tao += 1;
@@ -182,7 +322,7 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
             /* initializing current point */
             curr[i] = k.V.point[1];
             /* -- calculating tao-distance */
-            curr[i].tao_d = calculate_tao_distance(k);
+            curr[i].tao_d = tao_distance(k);
             printf("tao_d: %lf\n", curr[i].tao_d);
             /* increment and modulous */
             count++;
@@ -193,6 +333,8 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
         for(i = 0; i <= size; i++) {
             if(best.tao_d > curr[i].tao_d) {
                 best = curr[i];
+                theta = k.theta;
+                curvature = k.curvature;
                 n = i;
             }
         }
@@ -202,7 +344,9 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
             search[i] = search[i + 1];
         }
         size -= 1;
-        /* initializing structure k
+        printf("-- Before --\n");
+        print_k(k); //for debugging purposes
+        /* reinitializing structure k
            -- setting chosen endpoint */
         k.V.point[1].x = best.x;
         k.V.point[1].y = best.y;
@@ -214,13 +358,28 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
         k.T1.point[0].x = k.V.point[1].x;
         k.T1.point[0].y = k.V.point[1].y;
         /* -- calculating second point of T1 vector */
-        k.T1.point[1].x = k.V.point[1].x + k.T2.i;
-        k.T1.point[1].y = k.V.point[1].y + k.T2.j;
-        k.T1.length = 1;
+        //k.T1.point[1].x = k.V.point[1].x + (k.V.i/k.V.length);
+        //k.T1.point[1].y = k.V.point[1].y + (k.V.j/k.V.length);
+        k.T1.point[1].x = k.V.point[1].x + cos(k.theta);
+        k.T1.point[1].y = k.V.point[1].y + sin(k.theta);
+        /* -- initializing vector values */
+        k.T1.i = k.V.i/k.V.length;
+        k.T1.j = k.V.j/k.V.length;
+        k.T1.length = length_v(k.T1);
+        /* -- shifting T2 vector */
+        k.T2.point[0].x = k.V.point[1].x;
+        k.T2.point[0].y = k.V.point[1].y;
+        /* -- calculating second point of T2 vector */
+        //k.T2.point[1].x = k.V.point[1].x + (k.V.i/k.V.length);
+        //k.T2.point[1].y = k.V.point[1].y + (k.V.j/k.V.length);
+        k.T2.point[1].x = k.V.point[1].x + cos(k.theta);
+        k.T2.point[1].y = k.V.point[1].y + sin(k.theta);
+        k.T2.length = length_v(k.T2);
         /* -- shifting starting point */
         k.V.point[0].x = k.V.point[1].x;
         k.V.point[0].y = k.V.point[1].y;
         k.V.point[0].pt = k.V.point[1].pt;
+        printf("-- After --\n");
         print_k(k); //for debugging purposes
         printf("New search: ");
         for(i = 0; i <= size; i++) {
@@ -237,16 +396,26 @@ double shortest_path(struct point_t start, int n, struct vector_t T1, struct poi
     return total;
 }
 
-/* calculates distance given index and structure */
-double calculate_tao_distance(struct curvature_t k)
+/* calculates theta given structure k */
+double calculate_theta(struct curvature_t k)
 {
-    double theta = 2 * acos(k.tao) + (M_PI / 180);
-    double curvature = sqrt(((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j))) / (sqrt((k.T1.i * k.T1.i) + (k.T1.j * k.T1.j)) * sqrt((k.T2.i * k.T2.i) + (k.T2.j * k.T2.j))) + 0.000001;
-    printf("curvature: %lf; ", curvature);
-    printf("angle = %lf; ", theta * 90 / M_PI);
+    return (2 * acos(k.tao) + (M_PI / 180));
+}
+
+/* calculates curvature given structure k */
+double calculate_curvature(struct curvature_t k)
+{
+    return (sqrt(((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j))) / (sqrt((k.T1.i * k.T1.i) + (k.T1.j * k.T1.j)) * sqrt((k.T2.i * k.T2.i) + (k.T2.j * k.T2.j))) + 0.000001);
+}
+
+/* calculates distance given index and structure */
+double tao_distance(struct curvature_t k)
+{
+    //printf("curvature: %lf; ", k.curvature);
+    //printf("angle = %lf; ", k.theta * 90 / M_PI);
     //return ((M_PI * vector_length)/(90 * sqrt(tao - 0.25))); //first implementation
     //return ((M_PI * (atan(sqrt(tao)/sqrt(tao - 0.25))) * vector_length)/(90 * sqrt(tao - 0.25)) + 1); //second implementation
-    return abs(tan(theta) * k.V.length / curvature); //third implementation
+    return abs(tan(k.theta) * k.V.length / k.curvature); //third implementation
 }
 
 /* calculates distance given two points */
@@ -290,10 +459,12 @@ double dot_product(struct vector_t start, struct vector_t end)
 /* prints structure k for debugging */
 void print_k(struct curvature_t k)
 {
-        printf("%c:(%lf, %lf), %c(%lf, %lf), V:<%lf, %lf>, |V| = %lf\n", k.V.point[0].pt, k.V.point[0].x, k.V.point[0].y, k.V.point[1].pt, k.V.point[1].x, k.V.point[1].y, k.V.i, k.V.j, k.V.length);
-        printf("%c1[0]:(%lf, %lf), %c1[1](%lf, %lf), T1:<%lf, %lf>, |T1| = %lf\n", k.T1.point[0].pt, k.T1.point[0].x, k.T1.point[0].y, k.T1.point[1].pt, k.T1.point[1].x, k.T1.point[1].y, k.T1.i, k.T1.j, k.T1.length);
-        printf("%c2[0]:(%lf, %lf), %c2[1](%lf, %lf), T2:<%lf, %lf>, |T2| = %lf\n", k.T2.point[0].pt, k.T2.point[0].x, k.T2.point[0].y, k.T2.point[1].pt, k.T2.point[1].x, k.T2.point[1].y, k.T2.i, k.T2.j, k.T2.length);
-	printf("tao = %lf\n\n", k.tao);
+    printf("%c:(%lf, %lf), %c:(%lf, %lf), V:<%lf, %lf>, |V| = %lf\n", k.V.point[0].pt, k.V.point[0].x, k.V.point[0].y, k.V.point[1].pt, k.V.point[1].x, k.V.point[1].y, k.V.i, k.V.j, k.V.length);
+    printf("%c1[0]:(%lf, %lf), %c1[1](%lf, %lf), T1:<%lf, %lf>, |T1| = %lf\n", k.T1.point[0].pt, k.T1.point[0].x, k.T1.point[0].y, k.T1.point[1].pt, k.T1.point[1].x, k.T1.point[1].y, k.T1.i, k.T1.j, k.T1.length);
+    printf("%c2[0]:(%lf, %lf), %c2[1](%lf, %lf), T2:<%lf, %lf>, |T2| = %lf\n", k.T2.point[0].pt, k.T2.point[0].x, k.T2.point[0].y, k.T2.point[1].pt, k.T2.point[1].x, k.T2.point[1].y, k.T2.i, k.T2.j, k.T2.length);
+    printf("curvature: %lf; ", k.curvature);
+    printf("angle = %lf; ", k.theta * 90 / M_PI);
+    printf("tao = %lf\n\n", k.tao);
 }
 
 /*
