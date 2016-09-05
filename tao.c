@@ -266,22 +266,23 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
 double calculate_theta(struct curvature_t k)
 {
     //return (2 * acos(k.tao) - (M_PI / 180));
-    return (2 * acos(k.tao) - (M_PI / 180));
+    return (2 * acos(k.tao));
 }
 
 /* calculates curvature given structure k */
 double calculate_curvature(struct curvature_t k)
 {
-    return (sqrt(((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j))) / (sqrt((k.T1.i * k.T1.i) + (k.T1.j * k.T1.j)) * sqrt((k.T2.i * k.T2.i) + (k.T2.j * k.T2.j))) + 0.000001);
     //return (sqrt(((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j))) / (sqrt((k.T1.i * k.T1.i) + (k.T1.j * k.T1.j)) * sqrt((k.T2.i * k.T2.i) + (k.T2.j * k.T2.j))));
+    //return (sqrt(((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j))) / (sqrt((k.T1.i * k.T1.i) + (k.T1.j * k.T1.j)) * sqrt((k.T2.i * k.T2.i) + (k.T2.j * k.T2.j))) + 0.000001);
+    return (sqrt(((k.T2.i - k.T1.i) * (k.T2.i - k.T1.i)) + ((k.T2.j - k.T1.j) * (k.T2.j - k.T1.j))) / calculate_theta(k));
 }
 
 /* calculates distance given index and structure */
 double tao_distance(struct curvature_t k)
 {
-    //return abs(tan(k.theta) * k.V.length / k.curvature);
+    return abs((tan(k.theta) + 1) * k.V.length / k.curvature);
     //return abs((tan(k.theta) * k.theta * k.tao) / (k.curvature + 29)) + k.V.length;
-    return abs((abs(tan(k.theta) * k.curvature) - k.curvature - k.V.length) * abs(k.tao));
+    //return abs((abs(tan(k.theta) * k.curvature) - k.curvature - k.V.length) * abs(k.tao));
     //return abs(k.curvature * k.V.length);
 }
 
