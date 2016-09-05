@@ -3,7 +3,7 @@
 #include <math.h>
 #include <float.h>
 
-#define SIZE 7
+#define SIZE 14
 
 struct point_t {
     double x;
@@ -17,7 +17,7 @@ void permute(struct point_t *point, struct point_t *shortest, int index, int n);
 double distance(struct point_t *point, int first, int last);
 int factorial(int n);
 
-char global_shortest[9] = {'\0'};
+char global_shortest[SIZE + 2] = {'\0'};
 int global_count = 0;
 
 int main(void)
@@ -27,41 +27,76 @@ int main(void)
     shortest = point;
     int start = 0;
     int n = SIZE - 1;
-    /* A(0,2) */
-    point[0].x = 0;
-    point[0].y = 2;
+    /* A(-6,1) */
+    point[0].x = -6;
+    point[0].y = 1;
     point[0].pt = 'A';
     point[0].curr = DBL_MAX;
-    /* B(2,2) */
-    point[1].x = 2;
-    point[1].y = 2;
+    /* B(-4,1) */
+    point[1].x = -4;
+    point[1].y = 1;
     point[1].pt = 'B';
     point[1].curr = DBL_MAX;
-    /* C(2,4) */
-    point[2].x = 2;
-    point[2].y = 4;
+    /* C(-6,-1) */
+    point[2].x = -6;
+    point[2].y = -1;
     point[2].pt = 'C';
     point[2].curr = DBL_MAX;
-    /* D(-1,2) */
-    point[3].x = -1;
-    point[3].y = 2;
+    /* D(-4,-1) */
+    point[3].x = -4;
+    point[3].y = -1;
     point[3].pt = 'D';
     point[3].curr = DBL_MAX;
-    /* E(-2,-2) */
-    point[4].x = -2;
-    point[4].y = -2;
+    /* E(5,1) */
+    point[4].x = 5;
+    point[4].y = 1;
     point[4].pt = 'E';
     point[4].curr = DBL_MAX;
-    /* F(0,-3) */
-    point[5].x = 0;
-    point[5].y = -3;
+    /* F(4,0) */
+    point[5].x = 4;
+    point[5].y = 0;
     point[5].pt = 'F';
     point[5].curr = DBL_MAX;
-    /* O(0,0) */
-    point[6].x = 0;
-    point[6].y = 0;
-    point[6].pt = 'O';
+    /* G(5,-1) */
+    point[6].x = 5;
+    point[6].y = -1;
+    point[6].pt = 'G';
     point[6].curr = DBL_MAX;
+    /* H(6,0) */
+    point[7].x = 6;
+    point[7].y = 0;
+    point[7].pt = 'H';
+    point[7].curr = DBL_MAX;
+    /* I(2,2) */
+    point[8].x = 2;
+    point[8].y = 2;
+    point[8].pt = 'I';
+    point[8].curr = DBL_MAX;
+    /* J(5,3) */
+    point[9].x = 5;
+    point[9].y = 3;
+    point[9].pt = 'J';
+    point[9].curr = DBL_MAX;
+    /* K(7,-3) */
+    point[10].x = 7;
+    point[10].y = -3;
+    point[10].pt = 'K';
+    point[10].curr = DBL_MAX;
+    /* L(-8,-2) */
+    point[11].x = -8;
+    point[11].y = -2;
+    point[11].pt = 'L';
+    point[11].curr = DBL_MAX;
+    /* M(-10,0) */
+    point[12].x = -10;
+    point[12].y = 0;
+    point[12].pt = 'M';
+    point[12].curr = DBL_MAX;
+    /* N(-8,2) */
+    point[13].x = -8;
+    point[13].y = 2;
+    point[13].pt = 'N';
+    point[13].curr = DBL_MAX;
     /* fills array with permutations */
     permute(point, shortest, start, n);
     printf("\n");
