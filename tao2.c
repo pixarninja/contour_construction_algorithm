@@ -40,6 +40,7 @@ int global_count = 0;
 
 double shortest_path(struct point_t *point, int size);
 double calculate_tao(struct point_t *point, int size);
+double division_constant(double tao);
 double calculate_theta(struct vector_t V1, struct vector_t V2);
 int **construct_curve(struct point_t *point, int size);
 struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions);
@@ -130,9 +131,9 @@ double calculate_tao(struct point_t *point, int size)
 }
 
 /* calculates the division increment */
-double division_increment(struct point_t *point, int size)
+double division_constant(double tao)
 {
-    return 1;
+    return (tao/((int)sqrt(tao) + 1));
 }
 
 /* returns a 2D array of neighbors for each point */
