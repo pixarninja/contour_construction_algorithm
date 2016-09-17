@@ -101,8 +101,32 @@ double shortest_path(struct point_t *point, int size)
 /* calculates tao given the input array of points */
 double calculate_tao(struct point_t *point, int size)
 {
-    double tao = 0;
-    return tao;
+    struct point_t center;
+    double shortest = DBL_MAX;
+    double longest = 0;
+    double tmp = 0;
+    int i = 0;
+    int sum_x = 0;
+    int sum_y = 0;
+    /* calculate average point */
+    for(i = 0; i <= size; i++) {
+        sum_x += point[i].x;
+        sum_y += point[i].y;
+    }
+    center.x = sum_x / size;
+    center.y = sum_y / size;
+    /* find shortest and longest distances */
+    for(i = 0; i <= size; i++) {
+        tmp = distance_p(center, point[i]);
+        if(tmp < shortest) {
+            shortest = tmp;
+        }
+        if(tmp > longest) {
+            longest = tmp;
+        }
+    }
+    /* return the difference in length of the position vectors */
+    return (longest - shortest);
 }
 
 /* calculates the division increment */
