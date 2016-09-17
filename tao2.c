@@ -39,10 +39,8 @@ struct triangle_t {
 int global_count = 0;
 
 double shortest_path(struct point_t *point, int size);
-double calculate_tao(struct point_t *point, int size);
-double division_constant(double tao);
-double calculate_theta(struct vector_t V1, struct vector_t V2);
 int **construct_curve(struct point_t *point, int size);
+double calculate_theta(struct vector_t V1, struct vector_t V2);
 struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions);
 double distance_p(struct point_t start, struct point_t end);
 double distance_v(struct vector_t start, struct vector_t end);
@@ -99,13 +97,17 @@ double shortest_path(struct point_t *point, int size)
     return total;
 }
 
-/* calculates tao given the input array of points */
-double calculate_tao(struct point_t *point, int size)
+/* returns a 2D array of (0, 1, or 2) neighbors for each point */
+int **construct_curve(struct point_t *point, int size)
 {
+    int *curve = malloc(sizeof(int) * size);
+    double range = 0;
     struct point_t center;
     double shortest = DBL_MAX;
     double longest = 0;
     double tmp = 0;
+    double tao = 0;
+    double division_constant = 0;
     int i = 0;
     int sum_x = 0;
     int sum_y = 0;
@@ -127,20 +129,11 @@ double calculate_tao(struct point_t *point, int size)
         }
     }
     /* return the difference in length of the position vectors */
-    return (longest - shortest);
-}
-
-/* calculates the division increment */
-double division_constant(double tao)
-{
-    return (tao/((int)sqrt(tao) + 1));
-}
-
-/* returns a 2D array of neighbors for each point */
-int **construct_curve(struct point_t *point, int size)
-{
-    int **tmp;
-    return tmp;
+    tao = longest - shortest;
+    division_constant = (tao/((int)sqrt(tao) + 1));
+    /* find the points in the current range */
+    range = division_constant;
+    return &curve;
 }
 
 /* constructs triangles given the curve they are on*/
