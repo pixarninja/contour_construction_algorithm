@@ -3,7 +3,7 @@
 #include <math.h>
 #include <float.h>
 
-#define SIZE 14
+#define SIZE 13
 
 struct point_t {
     double x;
@@ -27,74 +27,69 @@ int main(void)
     shortest = point;
     int start = 0;
     int n = SIZE - 1;
-    /* A(0,1) */
+    /* A(0,0) */
     point[0].x = 0;
-    point[0].y = 1;
+    point[0].y = 0;
     point[0].pt = 'A';
     point[0].curr = DBL_MAX;
-    /* B(-1,-1) */
-    point[1].x = -1;
-    point[1].y = -1;
+    /* B(1,1) */
+    point[1].x = 1;
+    point[1].y = 1;
     point[1].pt = 'B';
     point[1].curr = DBL_MAX;
-    /* C(1,-1) */
-    point[2].x = 1;
+    /* C(-2,1) */
+    point[2].x = -2;
     point[2].y = -1;
     point[2].pt = 'C';
     point[2].curr = DBL_MAX;
-    /* D(0,-4) */
-    point[3].x = 0;
-    point[3].y = -4;
+    /* D(-2,2) */
+    point[3].x = -2;
+    point[3].y = 2;
     point[3].pt = 'D';
     point[3].curr = DBL_MAX;
-    /* E(4,0) */
-    point[4].x = 4;
-    point[4].y = 0;
+    /* E(0,3) */
+    point[4].x = 0;
+    point[4].y = 3;
     point[4].pt = 'E';
     point[4].curr = DBL_MAX;
-    /* F(3,3) */
+    /* F(3,2) */
     point[5].x = 3;
-    point[5].y = 3;
+    point[5].y = 2;
     point[5].pt = 'F';
     point[5].curr = DBL_MAX;
-    /* G(-3,3) */
-    point[6].x = -3;
-    point[6].y = 3;
+    /* G(3,0) */
+    point[6].x = 3;
+    point[6].y = 0;
     point[6].pt = 'G';
     point[6].curr = DBL_MAX;
-    /* H(-4,0) */
-    point[7].x = -4;
-    point[7].y = 0;
+    /* H(4,-1) */
+    point[7].x = 4;
+    point[7].y = -1;
     point[7].pt = 'H';
     point[7].curr = DBL_MAX;
-    /* I(-7,0) */
-    point[8].x = -7;
-    point[8].y = 0;
+    /* I(1,-3) */
+    point[8].x = 1;
+    point[8].y = -3;
     point[8].pt = 'I';
     point[8].curr = DBL_MAX;
-    /* J(-6,6) */
-    point[9].x = -6;
-    point[9].y = 6;
+    /* J(-2,-2) */
+    point[9].x = -2;
+    point[9].y = -2;
     point[9].pt = 'J';
     point[9].curr = DBL_MAX;
-    /* K(0,7) */
-    point[10].x = 0;
-    point[10].y = 7;
+    /* K(-2,-4) */
+    point[10].x = -2;
+    point[10].y = -4;
     point[10].pt = 'K';
     point[10].curr = DBL_MAX;
-    /* L(7,0) */
-    point[11].x = 7;
-    point[11].y = 0;
+    /* L(-4,-1) */
+    point[11].x = -4;
+    point[11].y = -1;
     point[11].pt = 'L';
     point[11].curr = DBL_MAX;
-    /* M(5,-5) */
-    point[12].x = 5;
-    point[12].y = -5;
-    point[12].pt = 'M';
-    point[12].curr = DBL_MAX;
-    /* N(0,-7) */
-    point[12].x = 0;
-    point[12].y = -7;
+    /* M(-4,4) */
+    point[12].x = -4;
+    point[12].y = 4;
     point[12].pt = 'M';
     point[12].curr = DBL_MAX;
     /* fills array with permutations */
