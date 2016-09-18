@@ -40,7 +40,6 @@ int global_count = 0;
 
 double shortest_path(struct point_t *point, int size);
 int **construct_curve(struct point_t *point, int size);
-double calculate_curvature(struct vector_t T1, struct vector_t T2);
 double calculate_theta(struct vector_t V1, struct vector_t V2);
 double tao_distance(double theta, double length, double curvature);
 struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions);
@@ -139,9 +138,12 @@ int **construct_curve(struct point_t *point, int size)
     double tao = 0;
     double division_constant = 0;
     int **curve = malloc(sizeof(int *) * size);
+    int **neighbors = malloc(sizeof(int *) * size);
+    int shortest_path[2];
     int i = 0;
     int j = 0;
     int k = 0;
+    int tmp = 0;
     int sum_x = 0;
     int sum_y = 0;
     int division_number = 0;
@@ -170,6 +172,7 @@ int **construct_curve(struct point_t *point, int size)
     range[0] = shortest;
     for(i = 0; i < division_number; i++) {
         range[1] = (division_constant * (i + 1)) + shortest;
+        /* initialize curve */
         curve[i] = malloc(sizeof(int) * size);
         for(j = 0; j <= size; j++) {
             curve[i][j] = SIZE;
@@ -177,14 +180,14 @@ int **construct_curve(struct point_t *point, int size)
         for(j = 0; j <= size; j++) {
             /* range[0] < distance[j] < range[1] */
             if((distance[j] >= range[0]) && (distance[j] <= range[1])) {
-                curve[i][k] = j;
-                k++;
+                curve[i][j] = j;
+                //k++;
             }
         }
         range[0] = range[1];
         k = 0;
     }
-    /* printing for debug
+    /* printing for debug */
     for(i = 0; i < division_number; i++) {
         printf("curve[%d]: ", i);
         for(j = 0; j <= size; j++) {
@@ -193,14 +196,76 @@ int **construct_curve(struct point_t *point, int size)
             }
         }
         printf("\n");
-    }*/
+    }//*/
+    /* fills neighbors in a 2D array of length (size x 2)
+       with the indices of the two neighbors (index of SIZE means
+       a neighbor wasn't found)
+       -- initializes neighbors[] array */
+    for(i = 0; i <= size; i++) {
+        /* each point can have 0, 1, or 2 neighbors */
+        neighbors[i] = malloc(sizeof(int) * 2);
+        /* initialize to a non-existant point */
+        neighbors[i][0] = SIZE;
+        neighbors[i][1] = SIZE;
+    }
+    for(i = 0; i < division_number; i++) {
+        /* calculate distances between all paths within 
+           curve[i] */
+        for(j = 0; j <= size; j++) {
+            /* initializes shortest_path[] array to a non-existant
+               node */
+            shortest_path[0] = SIZE;
+            shortest_path[1] = SIZE;
+            /* first find a starting point (index j) */
+            if(curve[i][j] != SIZE) {
+                /* then compare distances between all the other
+                   points (index k) */
+                for(k = 0; k <= size; k++) {
+                    if((curve[i][k] != SIZE) && (k != j)) {
+                        /* stores the two shortest paths
+                           -- checks to see if it is the first path
+                           -- or then the second path
+                           -- stores paths if the current distance is
+                              less than the distance to the previous
+                              shortest path */
+                        if(shortest_path[0] == 14) {
+                            shortest_path[0] = k;
+                        }
+                        else if(shortest_path[1] == 14) {
+                            shortest_path[1] = k;
+                            /* keeps the smallest value in index 0 */
+                            if (shortest_path[1] < shortest_path[0]) {
+                                tmp = shortest_path[0];
+                                shortest_path[0] = shortest_path[1];
+                                shortest_path[1] = tmp;
+                            }
+                        }
+                        else if(distance_p(point[j], point[k]) <= distance_p(point[j], point[shortest_path[1]])) {
+                            /* stores new shortest path */
+                            shortest_path[1] = k;
+                            /* keeps the smallest value in index 0 */
+                            if (shortest_path[1] < shortest_path[0]) {
+                                tmp = shortest_path[0];
+                                shortest_path[0] = shortest_path[1];
+                                shortest_path[1] = tmp;
+                            }
+                        }
+                        else if(distance_p(point[j], point[k]) <= distance_p(point[j], point[shortest_path[1]])) {
+                            /* stores new shortest path */
+                            shortest_path[1] = k;
+                        }
+                    }
+                }
+                neighbors[j][0] = shortest_path[0];
+                neighbors[j][1] = shortest_path[1];
+            }
+        }
+    }
+    /* printing for debug */
+    for(i = 0; i <= size; i++) {
+        printf("node %d: %d, %d\n", i, neighbors[i][0], neighbors[i][1]);
+    }
     return curve;
-}
-
-/* calculates curvature given structure k */
-double calculate_curvature(struct vector_t T1, struct vector_t T2)
-{
-    return (distance_v(T1, T2) / (T1.length * T2.length));
 }
 
 /* calculates theta given two vectors */
