@@ -40,12 +40,14 @@ int global_count = 0;
 
 double shortest_path(struct point_t *point, int size);
 int **construct_curve(struct point_t *point, int size);
-double calculate_theta(struct vector_t V1, struct vector_t V2);
-double tao_distance(double theta, double length, double curvature);
 struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions);
+double calculate_theta(struct vector_t V1, struct vector_t V2);
+double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next);
+double tao_distance(double theta, double length, double curvature);
 double distance_p(struct point_t start, struct point_t end);
 double distance_v(struct vector_t start, struct vector_t end);
 double length_v(struct vector_t v);
+struct vector_t subtract_v(struct vector_t V2, struct vector_t V1);
 double dot_product(struct vector_t start, struct vector_t end);
 
 int main(void)
@@ -200,17 +202,15 @@ int **construct_curve(struct point_t *point, int size)
     /* fills neighbors in a 2D array of length (size x 2)
        with the indices of the two neighbors (index of SIZE means
        a neighbor wasn't found)
-       -- initializes neighbors[] array */
+       -- initializes neighbors[] array to a non-existant node */
     for(i = 0; i <= size; i++) {
         /* each point can have 0, 1, or 2 neighbors */
         neighbors[i] = malloc(sizeof(int) * 2);
-        /* initialize to a non-existant point */
         neighbors[i][0] = SIZE;
         neighbors[i][1] = SIZE;
     }
     for(i = 0; i < division_number; i++) {
-        /* calculate distances between all paths within 
-           curve[i] */
+        /* calculate distances between all paths within curve[i] */
         for(j = 0; j <= size; j++) {
             /* initializes shortest_path[] array to a non-existant
                node */
@@ -268,23 +268,74 @@ int **construct_curve(struct point_t *point, int size)
     return curve;
 }
 
+/* constructs triangles given the curve they are on*/
+struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions)
+{
+    struct triangle_t *triangle = malloc(sizeof(struct triangle_t) * 100);
+    return triangle;
+}
+
 /* calculates theta given two vectors */
 double calculate_theta(struct vector_t V1, struct vector_t V2)
 {
     return acos(dot_product(V1, V2)/(V1.length * V2.length));
 }
 
+/* calculates curvature given the previous, current, and next points */
+double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next)
+{
+    /* initializing point data
+       -- initializing vector V <prev, curr> */
+    struct vector_t V1;
+    V1.point[0].x = prev.x;
+    V1.point[0].y = prev.y;
+    V1.point[0].index = prev.index;
+    V1.point[1].x = curr.x;
+    V1.point[1].y = curr.y;
+    V1.point[1].index = curr.index;
+    V1.i = V1.point[1].x - V1.point[0].x;
+    V1.j = V1.point[1].y - V1.point[0].y;
+    V1.length = length_v(V1);
+    /* -- initializing vector T1 */
+    struct vector_t T1;
+    T1.point[0].x = curr.x;
+    T1.point[0].y = curr.y;
+    T1.point[0].index = curr.index;
+    T1.point[1].x = (V1.i / V1.length) + V1.i;
+    T1.point[1].y = (V1.j / V1.length) + V1.j;
+    T1.point[1].index = 14;
+    T1.i = T1.point[1].x - T1.point[0].x;
+    T1.j = T1.point[1].y - T1.point[0].y;
+    T1.length = 1;
+    /* initializing vector V2, <curr, next> */
+    struct vector_t V2;
+    V2.point[0].x = curr.x;
+    V2.point[0].y = curr.y;
+    V2.point[0].index = curr.index;
+    V2.point[1].x = next.x;
+    V2.point[1].y = next.y;
+    V2.point[1].index = next.index;
+    V2.i = V1.point[1].x - V1.point[0].x;
+    V2.j = V1.point[1].y - V1.point[0].y;
+    V2.length = length_v(V2);
+    /* -- initializing vector T2 */
+    struct vector_t T2;
+    T2.point[0].x = curr.x;
+    T2.point[0].y = curr.y;
+    T2.point[0].index = curr.index;
+    T2.point[1].x = (V2.i / V2.length) + V2.i;
+    T2.point[1].y = (V2.j / V2.length) + V2.j;
+    T2.point[1].index = 14;
+    T2.i = T2.point[1].x - T2.point[0].x;
+    T2.j = T2.point[1].y - T2.point[0].y;
+    T2.length = 1;
+    return (length_v(subtract_v(T1, T2)) / calculate_theta(T1, T2));
+}
+
 /* calculates tao_distance given theta, length and curvature */
 double tao_distance(double theta, double length, double curvature)
 {
     return abs((tan(theta) + 1) * length / curvature);
-}
-
-/* constructs triangles given the curve they are on*/
-struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions)
-{
-    struct triangle_t *triangle = malloc(sizeof(struct triangle_t) * 100);
-    return triangle;
 }
 
 /* calculates distance given two points */
@@ -307,12 +358,26 @@ double distance_v(struct vector_t start, struct vector_t end)
     return sqrt((i_2 - i_1) * (i_2 - i_1) + (j_2 - j_1) * (j_2 - j_1));
 }
 
-/* calculates length of a single vectors */
-double length_v(struct vector_t v)
+/* calculates length of a single vector */
+double length_v(struct vector_t V)
 {
-    double i = v.i;
-    double j = v.j;
+    double i = V.i;
+    double j = V.j;
     return sqrt((i * i) + (j * j));
+}
+
+/* calculates difference of a two vectors */
+struct vector_t subtract_v(struct vector_t V2, struct vector_t V1)
+{
+    struct vector_t S;
+    S.point[0].x = V1.point[1].x;
+    S.point[0].y = V1.point[1].y;
+    S.point[1].x = V2.point[1].x;
+    S.point[1].y = V2.point[1].y;
+    S.i = S.point[1].x - S.point[0].x;
+    S.j = S.point[1].y - S.point[0].y;
+    S.length = length_v(S);
+    return S;
 }
 
 /* calculates dot product of two vectors */
