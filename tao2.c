@@ -37,7 +37,7 @@ struct triangle_t {
 int global_count = 0;
 
 double shortest_path(struct point_t *point, int size);
-int **construct_curve(struct point_t *point, int size);
+int **construct_neighbors(struct point_t *point, int size);
 struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions);
 double calculate_theta(struct vector_t V1, struct vector_t V2);
 double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next);
@@ -123,16 +123,19 @@ int main(void)
 double shortest_path(struct point_t *point, int size)
 {
     double total = size;
-    int **curve = construct_curve(point, size);
+    int **neighbors = construct_neighbors(point, size);
     return total;
 }
 
-/* creates a 2D array of curves from the point data */
-int **construct_curve(struct point_t *point, int size)
+/* creates a 2D array (size x 2) of neighbors from the point data */
+int **construct_neighbors(struct point_t *point, int size)
 {
     struct point_t center;
     struct point_t prev;
     struct vector_t *position = malloc(sizeof(struct vector_t) * size);
+    struct vector_t t_axis;
+    struct vector_t x_axis;
+    struct vector_t y_axis;
     double *distance = malloc(sizeof(double) * size);
     double range[2] = {0};
     double shortest = DBL_MAX;
@@ -143,7 +146,7 @@ int **construct_curve(struct point_t *point, int size)
     double sum_y = 0;
     int **curve = malloc(sizeof(int *) * size);
     int **neighbors = malloc(sizeof(int *) * size);
-    int shortest_curvature[2];
+    int smallest_curvature[2];
     int i = 0;
     int j = 0;
     int k = 0;
@@ -163,7 +166,7 @@ int **construct_curve(struct point_t *point, int size)
         position[i].point[0].index = SIZE;
         position[i].point[1].x = point[i].x;
         position[i].point[1].y = point[i].y;
-        position[i].point[1].index = SIZE;
+        position[i].point[1].index = point[i].index;
         position[i].i = point[i].x - center.x;
         position[i].j = point[i].y - center.y;
         position[i].length = length_v(position[i]);
@@ -223,54 +226,63 @@ int **construct_curve(struct point_t *point, int size)
     for(i = 0; i < division_number; i++) {
         /* calculate distances between all paths within curve[i] */
         for(j = 0; j <= size; j++) {
-            /* initializes shortest_curvature[] array to a non-existant
+            /* initializes smallest_curvature[] array to a non-existant
                node */
-            shortest_curvature[0] = SIZE;
-            shortest_curvature[1] = SIZE;
+            smallest_curvature[0] = SIZE;
+            smallest_curvature[1] = SIZE;
+            /* initializes t_axis */
+            t_axis.i = position[j].j;
+            t_axis.j = -position[j].i;
+            t_axis.length = length_v(t_axis);
+            t_axis.point[0].x = center.x;
+            t_axis.point[0].y = center.y;
+            t_axis.point[0].index = SIZE;
+            t_axis.point[1].x = center.x + t_axis.i;
+            t_axis.point[1].y = center.y + t_axis.j;
+            t_axis.point[1].index = SIZE;
             /* first find a starting point (index j) */
             if(curve[i][j] != SIZE) {
-                /* then compare distances between all the other
-                   points (index k)
-                */
                 /* initializing previous point for j */
                 prev.x = point[j].x + (position[j].i / position[j].length);
                 prev.y = point[j].y + (position[j].j / position[j].length);
                 prev.index = SIZE;
+                /* then compare distances between all the other
+                   points (index k) */
                 for(k = 0; k <= size; k++) {
                     if((curve[i][k] != SIZE) && (k != j)) {
                         /* stores the two shortest paths
                            -- stores paths if the current curvature is
                               less than the curvature of the last
                               point */
-                        if(shortest_curvature[0] == SIZE) {
-                            shortest_curvature[0] = k;
+                        if(smallest_curvature[0] == SIZE) {
+                            smallest_curvature[0] = k;
                         }
-                        else if(shortest_curvature[1] == SIZE) {
-                            shortest_curvature[1] = k;
+                        else if(smallest_curvature[1] == SIZE) {
+                            smallest_curvature[1] = k;
                             /* keeps the smallest value in index 0 */
-                            if (calculate_curvature(prev, point[j], point[shortest_curvature[1]]) <= calculate_curvature(prev, point[j], point[shortest_curvature[0]])) {
-                                tmp = shortest_curvature[0];
-                                shortest_curvature[0] = shortest_curvature[1];
-                                shortest_curvature[1] = tmp;
+                            if (calculate_curvature(prev, point[j], point[smallest_curvature[1]]) <= calculate_curvature(prev, point[j], point[smallest_curvature[0]])) {
+                                tmp = smallest_curvature[0];
+                                smallest_curvature[0] = smallest_curvature[1];
+                                smallest_curvature[1] = tmp;
                             }
                         }
-                        else if(calculate_curvature(prev, point[j], point[k]) <= calculate_curvature(prev, point[j], point[shortest_curvature[1]])) {
+                        else if(calculate_curvature(prev, point[j], point[k]) <= calculate_curvature(prev, point[j], point[smallest_curvature[1]])) {
                             /* stores new shortest path */
-                            shortest_curvature[1] = k;
+                            smallest_curvature[1] = k;
                             /* keeps the smallest value in index 0 */
-                            if (calculate_curvature(prev, point[j], point[shortest_curvature[1]]) <= calculate_curvature(prev, point[j], point[shortest_curvature[0]])) {
-                                tmp = shortest_curvature[0];
-                                shortest_curvature[0] = shortest_curvature[1];
-                                shortest_curvature[1] = tmp;
+                            if (calculate_curvature(prev, point[j], point[smallest_curvature[1]]) <= calculate_curvature(prev, point[j], point[smallest_curvature[0]])) {
+                                tmp = smallest_curvature[0];
+                                smallest_curvature[0] = smallest_curvature[1];
+                                smallest_curvature[1] = tmp;
                             }
                         }
                     }
                 }
                 /* printing for debug
-                printf("curv[%d] = %0.2lf, : curv[%d] = %0.2lf\n", shortest_curvature[0], calculate_curvature(prev, point[j], point[shortest_curvature[0]]), shortest_curvature[1], calculate_curvature(prev, point[j], point[shortest_curvature[1]])); */
+                printf("curv[%d] = %0.2lf, : curv[%d] = %0.2lf\n", smallest_curvature[0], calculate_curvature(prev, point[j], point[smallest_curvature[0]]), smallest_curvature[1], calculate_curvature(prev, point[j], point[smallest_curvature[1]])); */
                 /* sets neighbors of node i */
-                neighbors[j][0] = shortest_curvature[0];
-                neighbors[j][1] = shortest_curvature[1];
+                neighbors[j][0] = smallest_curvature[0];
+                neighbors[j][1] = smallest_curvature[1];
             }
         }
     }
@@ -293,18 +305,7 @@ struct triangle_t *construct_triangles(struct point_t **curve, int size,int divi
 double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next)
 {
     /* initializing point data
-       -- initializing vector V <prev, curr>
-    struct vector_t V1;
-    V1.point[0].x = prev.x;
-    V1.point[0].y = prev.y;
-    V1.point[0].index = prev.index;
-    V1.point[1].x = curr.x;
-    V1.point[1].y = curr.y;
-    V1.point[1].index = curr.index;
-    V1.i = V1.point[1].x - V1.point[0].x;
-    V1.j = V1.point[1].y - V1.point[0].y;
-    V1.length = length_v(V1);*/
-    /* -- initializing vector T1 */
+       -- initializing vector T1 */
     struct vector_t T1;
     T1.point[0].x = curr.x;
     T1.point[0].y = curr.y;
@@ -337,15 +338,12 @@ double calculate_curvature(struct point_t prev, struct point_t curr, struct poin
     T2.i = T2.point[1].x - T2.point[0].x;
     T2.j = T2.point[1].y - T2.point[0].y;
     T2.length = length_v(T2);
-    //return (length_v(subtract_v(T1, T2)) / calculate_theta(T1, T2));
     return (calculate_theta(T1, T2));
 }
 
 /* calculates theta given two vectors */
 double calculate_theta(struct vector_t V1, struct vector_t V2)
 {
-    //printf("dot_product<%0.2lf,%0.2lf>,<%0.2lf,%0.2lf> = %0.2lf\n", V1.i, V1.j, V2.i, V2.j, dot_product(V1, V2));
-    //printf("length<%0.2lf,%0.2lf> = %0.2lf,length<%0.2lf,%0.2lf> = %0.2lf\n", V1.i, V1.j, V1.length, V2.i, V2.j, V2.length);
     return acos(dot_product(V1, V2)/(V1.length * V2.length));
 }
 
