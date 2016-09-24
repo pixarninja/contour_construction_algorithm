@@ -50,67 +50,25 @@ double dot_product(struct vector_t start, struct vector_t end);
 
 int main(void)
 {
+    FILE *data = fopen("datapoints.dat", "r");
     struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
-    int size = SIZE - 1;
     double distance = 0;
-    /* A(0,1) */
-    point[0].x = 0;
-    point[0].y = 1;
-    point[0].index = 0;
-    /* B(-1,-1) */
-    point[1].x = -1;
-    point[1].y = -1;
-    point[1].index = 1;
-    /* C(1,-1) */
-    point[2].x = 1;
-    point[2].y = -1;
-    point[2].index = 2;
-    /* D(0,-4) */
-    point[3].x = 0;
-    point[3].y = -4;
-    point[3].index = 3;
-    /* E(4,0) */
-    point[4].x = 4;
-    point[4].y = 0;
-    point[4].index = 4;
-    /* F(3,3) */
-    point[5].x = 3;
-    point[5].y = 3;
-    point[5].index = 5;
-    /* G(-3,3) */
-    point[6].x = -3;
-    point[6].y = 3;
-    point[6].index = 6;
-    /* H(-4,0) */
-    point[7].x = -4;
-    point[7].y = 0;
-    point[7].index = 7;
-    /* I(-7,0) */
-    point[8].x = -7;
-    point[8].y = 0;
-    point[8].index = 8;
-    /* J(-6,6) */
-    point[9].x = -6;
-    point[9].y = 6;
-    point[9].index = 9;
-    /* K(0,7) */
-    point[10].x = 0;
-    point[10].y = 7;
-    point[10].index = 10;
-    /* L(7,0) */
-    point[11].x = 7;
-    point[11].y = 0;
-    point[11].index = 11;
-    /* M(5,-5) */
-    point[12].x = 5;
-    point[12].y = -5;
-    point[12].index = 12;
-    /* N(0,-7) */
-    point[13].x = 0;
-    point[13].y = -7;
-    point[13].index = 13;
+    int size = 0;
+    int i = 0;
+    while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
+        size++;
+        i++;
+    }
+    fclose(data);
+    /* plots data */
+    FILE *GNUplot_pipe = popen ("gnuplot -persistent", "w");
+    fprintf(GNUplot_pipe, "plot '-' \n");
+    for(i = 0; i < SIZE; i++) {
+        fprintf(GNUplot_pipe, "%lf %lf\n", point[i].x, point[i].y);
+    }
     /* runs tao-distance algorithm on data */
-    distance = shortest_path(point, size);
+    distance = shortest_path(point, size - 1);
+    fprintf(GNUplot_pipe, "e");
     printf("\n");
     printf("Total Permutations: %d\n\n", global_count);
     printf("Shortest Path: %s\n", "derp");
@@ -133,9 +91,7 @@ int **construct_neighbors(struct point_t *point, int size)
     struct point_t center;
     struct point_t prev;
     struct vector_t *position = malloc(sizeof(struct vector_t) * size);
-    struct vector_t t_axis;
-    struct vector_t x_axis;
-    struct vector_t y_axis;
+    struct vector_t T;
     double *distance = malloc(sizeof(double) * size);
     double range[2] = {0};
     double shortest = DBL_MAX;
@@ -144,13 +100,15 @@ int **construct_neighbors(struct point_t *point, int size)
     double division_constant = 0;
     double sum_x = 0;
     double sum_y = 0;
+    struct vector_t projection_t;
+    struct vector_t projection_n;
     int **curve = malloc(sizeof(int *) * size);
     int **neighbors = malloc(sizeof(int *) * size);
     int smallest_curvature[2];
     int i = 0;
     int j = 0;
     int k = 0;
-    int tmp = 0;
+    int index = 0;
     int division_number = 0;
     /* calculate average point */
     for(i = 0; i <= size; i++) {
@@ -226,20 +184,19 @@ int **construct_neighbors(struct point_t *point, int size)
     for(i = 0; i < division_number; i++) {
         /* calculate distances between all paths within curve[i] */
         for(j = 0; j <= size; j++) {
-            /* initializes smallest_curvature[] array to a non-existant
-               node */
+            /* initializes smallest_curvature[] */
             smallest_curvature[0] = SIZE;
             smallest_curvature[1] = SIZE;
-            /* initializes t_axis */
-            t_axis.i = position[j].j;
-            t_axis.j = -position[j].i;
-            t_axis.length = length_v(t_axis);
-            t_axis.point[0].x = center.x;
-            t_axis.point[0].y = center.y;
-            t_axis.point[0].index = SIZE;
-            t_axis.point[1].x = center.x + t_axis.i;
-            t_axis.point[1].y = center.y + t_axis.j;
-            t_axis.point[1].index = SIZE;
+            /* initializes T */
+            T.i = position[j].j;
+            T.j = -position[j].i;
+            T.length = length_v(T);
+            T.point[0].x = center.x;
+            T.point[0].y = center.y;
+            T.point[0].index = SIZE;
+            T.point[1].x = center.x + T.i;
+            T.point[1].y = center.y + T.j;
+            T.point[1].index = SIZE;
             /* first find a starting point (index j) */
             if(curve[i][j] != SIZE) {
                 /* initializing previous point for j */
@@ -254,27 +211,58 @@ int **construct_neighbors(struct point_t *point, int size)
                            -- stores paths if the current curvature is
                               less than the curvature of the last
                               point */
-                        if(smallest_curvature[0] == SIZE) {
-                            smallest_curvature[0] = k;
-                        }
-                        else if(smallest_curvature[1] == SIZE) {
-                            smallest_curvature[1] = k;
-                            /* keeps the smallest value in index 0 */
-                            if (calculate_curvature(prev, point[j], point[smallest_curvature[1]]) <= calculate_curvature(prev, point[j], point[smallest_curvature[0]])) {
-                                tmp = smallest_curvature[0];
-                                smallest_curvature[0] = smallest_curvature[1];
-                                smallest_curvature[1] = tmp;
+                        /* vector from point k to T endpoint */
+                        projection_t.point[0].x = position[k].point[1].x;
+                        projection_t.point[0].y = position[k].point[1].y;
+                        projection_t.point[0].index = position[k].point[1].index;
+                        projection_t.point[1].x = T.point[1].x;
+                        projection_t.point[1].y = T.point[1].y;
+                        projection_t.point[1].index = T.point[1].index;
+                        projection_t.i = projection_t.point[1].x - projection_t.point[0].x;
+                        projection_t.j = projection_t.point[1].y - projection_t.point[0].y;
+                        projection_t.length = length_v(projection_t);
+                        /* vector from point k to N endpoint */
+                        projection_n.point[0].x = position[k].point[1].x;
+                        projection_n.point[0].y = position[k].point[1].y;
+                        projection_n.point[1].x = position[j].point[1].x;
+                        projection_n.point[1].y = position[j].point[1].y;
+                        projection_n.i = projection_n.point[1].x - projection_n.point[0].x;
+                        projection_n.j = projection_n.point[1].y - projection_n.point[0].y;
+                        projection_n.length = length_v(projection_n);
+                        /* check if projection_t is the edge case */
+                        printf("i = %d, j = %d, k = %d\n", i, j, k);
+                        printf("projection_t.length: %lf, sqrt(2 * T.length) = %lf\n", projection_t.length, sqrt(2 * T.length));
+                        if(isgreaterequal(projection_t.length, sqrt(2 * T.length)) && islessequal(projection_t.length, sqrt(2 * T.length))) {
+                            /* N-axis
+                               -- check if projection_n is the edge case */
+                            if(isgreaterequal(projection_n.length, sqrt(2 * position[j].length)) && isgreaterequal(projection_n.length, sqrt(2 * position[j].length))) {
+                                printf("ERROR: duplicated point detected. Exiting Program.\n");
+                                exit(EXIT_FAILURE);
+                            }
+                            /* store in "negative" array */
+                            else if(isgreaterequal(projection_n.length, sqrt(2 * position[j].length))) {
+                                index = 1;
+                            }
+                            /* store in "positive" array */
+                            else {
+                                index = 0;
                             }
                         }
-                        else if(calculate_curvature(prev, point[j], point[k]) <= calculate_curvature(prev, point[j], point[smallest_curvature[1]])) {
-                            /* stores new shortest path */
-                            smallest_curvature[1] = k;
-                            /* keeps the smallest value in index 0 */
-                            if (calculate_curvature(prev, point[j], point[smallest_curvature[1]]) <= calculate_curvature(prev, point[j], point[smallest_curvature[0]])) {
-                                tmp = smallest_curvature[0];
-                                smallest_curvature[0] = smallest_curvature[1];
-                                smallest_curvature[1] = tmp;
-                            }
+                        /* T-axis
+                           -- store in "negative" array */
+                        else if(isgreaterequal(projection_t.length, sqrt(2 * T.length))) {
+                            index = 1;
+                        }
+                        else {
+                            /* store in "positive" array */
+                            index = 0;
+                        }
+                        /* curvature calculations */
+                        if(smallest_curvature[index] == SIZE) {
+                            smallest_curvature[index] = k;
+                        }
+                        else if (islessequal(calculate_curvature(prev, point[j], point[k]), calculate_curvature(prev, point[j], point[smallest_curvature[index]]))) {
+                            smallest_curvature[index] = k;
                         }
                     }
                 }
