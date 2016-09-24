@@ -3,8 +3,6 @@
 #include <math.h>
 #include <float.h>
 
-#define SIZE 14
-
 struct point_t {
     double x;
     double y;
@@ -26,7 +24,7 @@ struct function_t {
 
 struct triangle_t {
     char name[3];
-    char points[SIZE - 1];
+    char *points;
     struct function_t f1;
     struct function_t f2;
     struct function_t f3;
@@ -36,11 +34,11 @@ struct triangle_t {
 
 int global_count = 0;
 
-double shortest_path(struct point_t *point, int size);
-int **construct_neighbors(struct point_t *point, int size);
-struct triangle_t *construct_triangles(struct point_t **curve, int size,int divisions);
+double shortest_path(struct point_t *point, int size, FILE *commands);
+int **construct_neighbors(struct point_t *point, int size, FILE *commands);
+struct triangle_t *construct_triangles(struct point_t **curve, int size, int divisions);
 double calculate_theta(struct vector_t V1, struct vector_t V2);
-double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next);
+double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next, int size);
 double tao_distance(double theta, double length, double curvature);
 double distance_p(struct point_t start, struct point_t end);
 double distance_v(struct vector_t start, struct vector_t end);
@@ -51,42 +49,53 @@ double dot_product(struct vector_t start, struct vector_t end);
 int main(void)
 {
     FILE *data = fopen("datapoints.dat", "r");
-    struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
-    double distance = 0;
+    FILE *tmp = fopen("gnu.tmp", "w");
+    FILE *commands = fopen ("commands.gnuplot", "w");
+    //FILE *GNUplot_pipe = popen ("gnuplot -persistent", "w");
+    char buf[1024];
+    struct point_t *point;
     int size = 0;
     int i = 0;
-    while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
+    double distance = 0;
+    while(fgets(buf, 1024, data)) {
         size++;
+    }
+    fclose(data);
+    data = fopen("datapoints.dat", "r");
+    point = malloc(sizeof(struct point_t) * size);
+    while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
         i++;
     }
     fclose(data);
     /* plots data */
-    FILE *GNUplot_pipe = popen ("gnuplot -persistent", "w");
-    fprintf(GNUplot_pipe, "plot '-' \n");
-    for(i = 0; i < SIZE; i++) {
-        fprintf(GNUplot_pipe, "%lf %lf\n", point[i].x, point[i].y);
+    for(i = 0; i < size; i++) {
+        fprintf(tmp, "%lf %lf %d\n", point[i].x, point[i].y, point[i].index);
     }
+    fprintf(commands, "set title \"DATA POINTS\"\n");
+    fprintf(commands, "plot 'gnu.tmp' using 1:2:3 with labels point pt 7 offset char -1,-1 notitle\n");
     /* runs tao-distance algorithm on data */
-    distance = shortest_path(point, size - 1);
-    fprintf(GNUplot_pipe, "e");
+    distance = shortest_path(point, size - 1, commands);
     printf("\n");
     printf("Total Permutations: %d\n\n", global_count);
     printf("Shortest Path: %s\n", "derp");
     printf("Distance: %lf\n", distance);
     printf("\n");
+    fclose(tmp);
+    fclose(commands);
+    system("gnuplot -persistent commands.gnuplot");
     return 0;
 }
 
 /* calculates the shortest path */
-double shortest_path(struct point_t *point, int size)
+double shortest_path(struct point_t *point, int size, FILE *commands)
 {
     double total = size;
-    int **neighbors = construct_neighbors(point, size);
+    int **neighbors = construct_neighbors(point, size, commands);
     return total;
 }
 
 /* creates a 2D array (size x 2) of neighbors from the point data */
-int **construct_neighbors(struct point_t *point, int size)
+int **construct_neighbors(struct point_t *point, int size, FILE *commands)
 {
     struct point_t center;
     struct point_t prev;
@@ -110,6 +119,8 @@ int **construct_neighbors(struct point_t *point, int size)
     int k = 0;
     int index = 0;
     int division_number = 0;
+    /* plot */
+    fprintf(commands, "plot '' using 1:2 with lines, '' using 1:2:3 with labels point pt 7 offset char -1,-1 notitle\n");
     /* calculate average point */
     for(i = 0; i <= size; i++) {
         sum_x += point[i].x;
@@ -121,7 +132,7 @@ int **construct_neighbors(struct point_t *point, int size)
     for(i = 0; i <= size; i++) {
         position[i].point[0].x = center.x;
         position[i].point[0].y = center.y;
-        position[i].point[0].index = SIZE;
+        position[i].point[0].index = size + 1;
         position[i].point[1].x = point[i].x;
         position[i].point[1].y = point[i].y;
         position[i].point[1].index = point[i].index;
@@ -150,7 +161,7 @@ int **construct_neighbors(struct point_t *point, int size)
         /* initialize curve */
         curve[i] = malloc(sizeof(int) * size);
         for(j = 0; j <= size; j++) {
-            curve[i][j] = SIZE;
+            curve[i][j] = size + 1;
         }
         for(j = 0; j <= size; j++) {
             /* range[0] < distance[j] < range[1] */
@@ -165,48 +176,48 @@ int **construct_neighbors(struct point_t *point, int size)
     for(i = 0; i < division_number; i++) {
         printf("curve[%d]: ", i);
         for(j = 0; j <= size; j++) {
-            if(curve[i][j] != SIZE) {
+            if(curve[i][j] != size + 1) {
                 printf("%d ", curve[i][j]);
             }
         }
         printf("\n");
     }*/
     /* fills neighbors in a 2D array of length (size x 2)
-       with the indices of the two neighbors (index of SIZE means
+       with the indices of the two neighbors (index of size + 1 means
        a neighbor wasn't found)
        -- initializes neighbors[] array to a non-existant node */
     for(i = 0; i <= size; i++) {
         /* each point can have 0, 1, or 2 neighbors */
         neighbors[i] = malloc(sizeof(int) * 2);
-        neighbors[i][0] = SIZE;
-        neighbors[i][1] = SIZE;
+        neighbors[i][0] = size + 1;
+        neighbors[i][1] = size + 1;
     }
     for(i = 0; i < division_number; i++) {
         /* calculate distances between all paths within curve[i] */
         for(j = 0; j <= size; j++) {
             /* initializes smallest_curvature[] */
-            smallest_curvature[0] = SIZE;
-            smallest_curvature[1] = SIZE;
+            smallest_curvature[0] = size + 1;
+            smallest_curvature[1] = size + 1;
             /* initializes T */
             T.i = position[j].j;
             T.j = -position[j].i;
             T.length = length_v(T);
             T.point[0].x = center.x;
             T.point[0].y = center.y;
-            T.point[0].index = SIZE;
+            T.point[0].index = size + 1;
             T.point[1].x = center.x + T.i;
             T.point[1].y = center.y + T.j;
-            T.point[1].index = SIZE;
+            T.point[1].index = size + 1;
             /* first find a starting point (index j) */
-            if(curve[i][j] != SIZE) {
+            if(curve[i][j] != (size + 1)) {
                 /* initializing previous point for j */
                 prev.x = point[j].x + (position[j].i / position[j].length);
                 prev.y = point[j].y + (position[j].j / position[j].length);
-                prev.index = SIZE;
+                prev.index = size + 1;
                 /* then compare distances between all the other
                    points (index k) */
                 for(k = 0; k <= size; k++) {
-                    if((curve[i][k] != SIZE) && (k != j)) {
+                    if((curve[i][k] != (size + 1)) && (k != j)) {
                         /* stores the two shortest paths
                            -- stores paths if the current curvature is
                               less than the curvature of the last
@@ -258,10 +269,10 @@ int **construct_neighbors(struct point_t *point, int size)
                             index = 0;
                         }
                         /* curvature calculations */
-                        if(smallest_curvature[index] == SIZE) {
+                        if(smallest_curvature[index] == (size + 1)) {
                             smallest_curvature[index] = k;
                         }
-                        else if (islessequal(calculate_curvature(prev, point[j], point[k]), calculate_curvature(prev, point[j], point[smallest_curvature[index]]))) {
+                        else if (islessequal(calculate_curvature(prev, point[j], point[k], size), calculate_curvature(prev, point[j], point[smallest_curvature[index]], size))) {
                             smallest_curvature[index] = k;
                         }
                     }
@@ -290,7 +301,7 @@ struct triangle_t *construct_triangles(struct point_t **curve, int size,int divi
 }
 
 /* calculates curvature given the previous, current, and next points */
-double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next)
+double calculate_curvature(struct point_t prev, struct point_t curr, struct point_t next, int size)
 {
     /* initializing point data
        -- initializing vector T1 */
@@ -322,7 +333,7 @@ double calculate_curvature(struct point_t prev, struct point_t curr, struct poin
     T2.point[0].index = curr.index;
     T2.point[1].x = (V2.i / V2.length) + T2.point[0].x;
     T2.point[1].y = (V2.j / V2.length) + T2.point[0].y;
-    T2.point[1].index = SIZE;
+    T2.point[1].index = size + 1;
     T2.i = T2.point[1].x - T2.point[0].x;
     T2.j = T2.point[1].y - T2.point[0].y;
     T2.length = length_v(T2);
