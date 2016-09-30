@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-g -Wall
 
-all: tao tao2
+all: tao tao2 shortest
 
 shortest:
 	$(CC) $(CFLAGS) shortest.c -o shortest -lm

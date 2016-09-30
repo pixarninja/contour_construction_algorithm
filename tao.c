@@ -43,9 +43,10 @@ struct curvature_t {
 int global_count = 0;
 
 double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES]);
-double calculate_theta(struct curvature_t k);
 double calculate_curvature(struct curvature_t k);
+double calculate_theta(struct curvature_t k);
 double tao_distance(struct curvature_t k);
+double angle_v(struct vector_t start, struct vector_t end);
 double distance_p(struct point_t start, struct point_t end);
 double distance_v(struct vector_t start, struct vector_t end);
 double length_v(struct vector_t v);
@@ -58,7 +59,7 @@ int main(void)
     gnu_files[0] = fopen ("./gnu_files/commands.tmp", "w+");
     gnu_files[1] = fopen("./gnu_files/points.tmp", "w+");
     gnu_files[2] = fopen("./gnu_files/lines.tmp", "w+");
-    FILE *data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
+    FILE *data = fopen("./datapoints/tao_distance/square.dat", "r");
     char buf[1024];
     int size = 0;
     int start = 0;
@@ -72,7 +73,7 @@ int main(void)
     struct point_t *point = malloc(sizeof(struct point_t) * size);
     struct point_t *shortest = malloc(sizeof(struct point_t) * size);
     point = malloc(sizeof(struct point_t) * size);
-    data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
+    data = fopen("./datapoints/tao_distance/square.dat", "r");
     while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
         if(abs(point[i].x) > range) {
             range = abs(point[i].x);
@@ -113,20 +114,42 @@ int main(void)
 /* calculates the shortest path */
 double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES])
 {
-    int i;
-    int j;
-    int count = 0;
-    int total_size = size - 1;
-    double total = 0;
+    struct vector_t initial;
+    struct vector_t check;
     struct point_t best;
     struct point_t end = start;
     struct point_t center;
+    double total = 0.0;
+    double sum_x = 0.0;
+    double sum_y = 0.0;
+    double theta = DBL_MAX;
+    double tmp = 0.0;
+    int i;
+    int j;
+    int index;
+    int count = 0;
+    int total_size = size - 1;
     best.x = DBL_MAX;
     best.y = DBL_MAX;
     best.tao_d = DBL_MAX;
     best.index = INT_MAX;
-    center.x = 0.0;
-    center.y = 0.0;
+    /* calculate average point */
+    for(i = 0; i <= size; i++) {
+        sum_x += search[i].x;
+        sum_y += search[i].y;
+    }
+    center.x = sum_x / size;
+    center.y = sum_y / size;
+    /* initialize initial vector */
+    initial.point[0].x = start.x;
+    initial.point[0].y = start.y;
+    initial.point[0].index = start.index;
+    initial.i = (start.x - center.x) / distance_p(start, center);
+    initial.j = (start.y - center.y) / distance_p(start, center);
+    initial.point[1].x = start.x + initial.i;
+    initial.point[1].y = start.y + initial.j;
+    initial.point[1].index = INT_MAX;
+    initial.length = length_v(initial);
     /* remove start index from search */
     for(i = 0; i <= size; i++) {
         if(search[i].index == start.index) {
@@ -158,15 +181,31 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
     k.T1.point[0].x = start.x;
     k.T1.point[0].y = start.y;
     k.T1.point[0].index = start.index;
-    k.T1.i = start.x / distance_p(center, start);
-    k.T1.j = start.y / distance_p(center, start);
-    k.T1.i = 0;
-    k.T1.j = 1;
-    printf("T1: <%lf,", k.T1.i);
-    printf("%lf>\n", k.T1.j);
+    /* checks for the point with the smallest deviation in angle from
+       the position vector of the starting point (selects the "second"
+       point) */
+    for(i = 0; i <= size; i ++) {
+        check.point[0].x = start.x;
+        check.point[0].y = start.y;
+        check.point[0].index = start.index;
+        check.point[1].x = search[i].x;
+        check.point[1].y = search[i].y;
+        check.point[1].index = search[i].index;
+        check.i = check.point[1].x - check.point[0].x;
+        check.j = check.point[1].y - check.point[0].y;
+        check.length = length_v(check);
+        tmp = angle_v(initial, check);
+        if(tmp < theta) {
+            theta = tmp;
+            index = i;
+        }
+    }
+    /* points T1 in the direction of the "second point" */
+    k.T1.i = (search[index].x - start.x) / distance_p(search[index], start);
+    k.T1.j = (search[index].y - start.y) / distance_p(search[index], start);
     k.T1.point[1].x = start.x + k.T1.i;
     k.T1.point[1].y = start.y + k.T1.j;
-    k.T1.point[1].index = 'T';
+    k.T1.point[1].index = INT_MAX;
     k.T1.length = 1;
     /* -- initializing vector T2 */
     k.T2.point[0].x = start.x;
@@ -194,7 +233,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
             /* -- initializing vector T2 */
             k.T2.point[1].x = k.V.point[1].x;
             k.T2.point[1].y = k.V.point[1].y;
-            k.T2.point[1].index = 'T';
+            k.T2.point[1].index = INT_MAX;
             k.T2.i = (k.T2.point[1].x - k.T2.point[0].x) / k.V.length;
             k.T2.j = (k.T2.point[1].y - k.T2.point[0].y) / k.V.length;
             k.T2.point[1].x = k.V.point[0].x + k.T2.i;
@@ -215,7 +254,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
             /* for debugging tao-distance function */
-            //print_k(k);
+            print_k(k);
             i++;
             count++;
         }
@@ -293,22 +332,28 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
     return total;
 }
 
-/* calculates theta given structure k */
-double calculate_theta(struct curvature_t k)
-{
-    return (2 * acos(k.tao) - (M_PI / 180));
-}
-
 /* calculates curvature given structure k */
 double calculate_curvature(struct curvature_t k)
 {
     return (sqrt(pow((k.T2.i - k.T1.i), 2) + pow((k.T2.j - k.T1.j), 2)) / calculate_theta(k));
 }
 
+/* calculates theta given structure k */
+double calculate_theta(struct curvature_t k)
+{
+    return (acos(k.tao) + (M_PI / 180));
+}
+
 /* calculates distance given index and structure */
 double tao_distance(struct curvature_t k)
 {
-    return abs(tan(k.theta) * k.V.length / k.curvature);
+    return (k.V.length * (k.curvature + 0.000001));
+}
+
+/* calculates angle between two vectors */
+double angle_v(struct vector_t start, struct vector_t end)
+{
+    return (acos(dot_product(start, end) / (start.length * end.length)));
 }
 
 /* calculates distance given two points */
