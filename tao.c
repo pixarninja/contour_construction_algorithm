@@ -58,12 +58,13 @@ int main(void)
     gnu_files[0] = fopen ("./gnu_files/commands.tmp", "w+");
     gnu_files[1] = fopen("./gnu_files/points.tmp", "w+");
     gnu_files[2] = fopen("./gnu_files/lines.tmp", "w+");
-    FILE *data = fopen("./datapoints/tao_distance/circle.dat", "r");
+    FILE *data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
     char buf[1024];
     int size = 0;
     int start = 0;
     int i = 0;
-    double distance = 0;
+    double distance = 0.0;
+    double range = 0.0;
     while(fgets(buf, 1024, data)) {
         size++;
     }
@@ -71,8 +72,14 @@ int main(void)
     struct point_t *point = malloc(sizeof(struct point_t) * size);
     struct point_t *shortest = malloc(sizeof(struct point_t) * size);
     point = malloc(sizeof(struct point_t) * size);
-    data = fopen("./datapoints/tao_distance/circle.dat", "r");
+    data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
     while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
+        if(abs(point[i].x) > range) {
+            range = abs(point[i].x);
+        }
+        if(abs(point[i].y) > range) {
+            range = abs(point[i].y);
+        }
         i++;
     }
     fclose(data);
@@ -81,8 +88,8 @@ int main(void)
         fprintf(gnu_files[1], "%lf %lf %d\n", point[i].x, point[i].y, point[i].index);
     }
     /* plot setup */
-    fprintf(gnu_files[0], "set xrange [-6:6]\n");
-    fprintf(gnu_files[0], "set yrange [-6:6]\n");
+    fprintf(gnu_files[0], "set xrange [%lf:%lf]\n", -(range + 1), range + 1);
+    fprintf(gnu_files[0], "set yrange [%lf:%lf]\n", -(range + 1), range + 1);
     fprintf(gnu_files[0], "set size ratio 1\n");
     fprintf(gnu_files[0], "set grid\n");
     fprintf(gnu_files[0], "set title \"Shortest Path of a 'Round' Dataset\"\n");
