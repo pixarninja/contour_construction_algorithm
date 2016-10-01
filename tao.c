@@ -44,7 +44,7 @@ struct curvature_t {
 
 int global_count = 0;
 
-double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES]);
+double shortest_path(struct point_t start, int n, struct point_t *search, int *shortest, int size, FILE *gnu_files[NUM_FILES]);
 double calculate_curvature(struct curvature_t k);
 double calculate_theta(struct curvature_t k);
 double tao_distance(struct curvature_t k);
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     FILE *data;
     FILE *gnu_files[NUM_FILES];
     struct point_t *point;
-    struct point_t *shortest;
+    int *shortest;
     char buf[1024];
     double distance = 0.0;
     double range = 0.0;
@@ -100,8 +100,7 @@ int main(int argc, char *argv[])
     }
     fclose(data);
     point = malloc(sizeof(struct point_t) * size);
-    shortest = malloc(sizeof(struct point_t) * size);
-    point = malloc(sizeof(struct point_t) * size);
+    shortest = malloc(sizeof(int) * size);
     switch(flag) {
         case 'c':
             data = fopen("./datapoints/tao_distance/circle.dat", "r");
@@ -134,13 +133,16 @@ int main(int argc, char *argv[])
     fprintf(gnu_files[0], "set grid\n");
     fprintf(gnu_files[0], "set title \"Shortest Path of a 'Round' Dataset\"\n");
     fprintf(gnu_files[0], "set style line 1 lc rgb \"black\" lw 1\n");
-    shortest = point;
     /* runs tao-distance algorithm on data */
-    distance = shortest_path(point[start], start, point, size - 1, gnu_files);
+    distance = shortest_path(point[start], start, point, shortest, size - 1, gnu_files);
     printf("\n");
-    printf("Total Permutations: %d\n\n", global_count);
-    printf("Shortest Path: %s\n", "TODO");
-    printf("Distance: %lf\n", distance);
+    printf("Shortest Path:\n");
+    for(i = 0; i < (size - 1); i++) {
+        printf("%d->", shortest[i]);
+    }
+    printf("%d\n\n", shortest[i]);
+    printf("Distance: %lf\n\n", distance);
+    printf("Total Permutations: %d\n", global_count);
     printf("\n");
     /* plot */
     fclose(gnu_files[0]);
@@ -151,7 +153,7 @@ int main(int argc, char *argv[])
 }
 
 /* calculates the shortest path */
-double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES])
+double shortest_path(struct point_t start, int n, struct point_t *search, int *shortest, int size, FILE *gnu_files[NUM_FILES])
 {
     struct vector_t initial;
     struct vector_t check;
@@ -307,6 +309,8 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
                 n = i;
             }
         }
+        shortest[global_count] = start.index;
+        total += distance_p(start, best);
         /* plot */
         fprintf(gnu_files[2], "%lf %lf\n", best.x, best.y);
         /* remove chosen point from search array */
@@ -362,6 +366,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
         count = 0;
         global_count++;
     }
+    shortest[global_count] = best.index;
     /* final point */
     fprintf(gnu_files[2], "%lf %lf\n", end.x, end.y);
     /* plot */
