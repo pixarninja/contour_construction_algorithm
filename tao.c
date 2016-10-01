@@ -14,6 +14,8 @@
 #include <math.h>
 #include <limits.h>
 #include <float.h>
+#include <ctype.h>
+#include <unistd.h>
 
 #define NUM_FILES 3
 
@@ -53,27 +55,64 @@ double length_v(struct vector_t v);
 double dot_product(struct vector_t start, struct vector_t end);
 void print_k(struct curvature_t k);
 
-int main(void)
+int main(int argc, char *argv[])
 {
+    FILE *data;
     FILE *gnu_files[NUM_FILES];
-    gnu_files[0] = fopen ("./gnu_files/commands.tmp", "w+");
-    gnu_files[1] = fopen("./gnu_files/points.tmp", "w+");
-    gnu_files[2] = fopen("./gnu_files/lines.tmp", "w+");
-    FILE *data = fopen("./datapoints/tao_distance/square.dat", "r");
+    struct point_t *point;
+    struct point_t *shortest;
     char buf[1024];
+    double distance = 0.0;
+    double range = 0.0;
     int size = 0;
     int start = 0;
     int i = 0;
-    double distance = 0.0;
-    double range = 0.0;
+    int c;
+    int flag;
+    if(argc == 1) {
+        printf("Shape option [c s p] or help screen [h] not chosen.\nExiting program. Good day.\n");
+        exit(EXIT_FAILURE);
+    }
+    while ((c = getopt(argc, argv, "csph")) != -1) {
+        switch (c) {
+        case 'c':
+            data = fopen("./datapoints/tao_distance/circle.dat", "r");
+            flag = 'c';
+            break;
+        case 's':
+            data = fopen("./datapoints/tao_distance/square.dat", "r");
+            flag = 's';
+            break;
+        case 'p':
+            data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
+            flag = 'p';
+            break;
+        case 'h':
+            printf("Enter -c for a circle, -s for a square, or -p for a cardioid\n");
+            return 0;
+        }
+    }
+    gnu_files[0] = fopen ("./gnu_files/commands.tmp", "w+");
+    gnu_files[1] = fopen("./gnu_files/points.tmp", "w+");
+    gnu_files[2] = fopen("./gnu_files/lines.tmp", "w+");
     while(fgets(buf, 1024, data)) {
         size++;
     }
     fclose(data);
-    struct point_t *point = malloc(sizeof(struct point_t) * size);
-    struct point_t *shortest = malloc(sizeof(struct point_t) * size);
     point = malloc(sizeof(struct point_t) * size);
-    data = fopen("./datapoints/tao_distance/square.dat", "r");
+    shortest = malloc(sizeof(struct point_t) * size);
+    point = malloc(sizeof(struct point_t) * size);
+    switch(flag) {
+        case 'c':
+            data = fopen("./datapoints/tao_distance/circle.dat", "r");
+            break;
+        case 's':
+            data = fopen("./datapoints/tao_distance/square.dat", "r");
+            break;
+        case 'p':
+            data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
+            break;
+    }
     while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
         if(abs(point[i].x) > range) {
             range = abs(point[i].x);
@@ -254,7 +293,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int si
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
             /* for debugging tao-distance function */
-            print_k(k);
+            //print_k(k);
             i++;
             count++;
         }
