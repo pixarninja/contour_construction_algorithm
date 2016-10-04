@@ -97,46 +97,63 @@ int main(int argc, char *argv[])
     int flag;
     if(argc == 1) {
         printf("Shape option [c s e] or help screen [h] not chosen.\nExiting program. Good day.\n");
-        exit(EXIT_FAILURE);
-    }
-    else if(argc == 2) {
-        printf("Number of datapoints to generate not chosen, use -h for more information.\nExiting program. Good day.\n");
-        exit(EXIT_FAILURE);
+        return 0;
     }
     while ((c = getopt(argc, argv, "cepsth")) != -1) {
         switch (c) {
         case 'c':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
             sprintf(tmp, "./shape_datapoint_generator/circle %s", argv[argc - 1]);
             system(tmp);
             data = fopen("./datapoints/tao_distance/circle.dat", "r");
             flag = 'c';
             break;
         case 'e':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
             sprintf(tmp, "./shape_datapoint_generator/ellipse %s", argv[argc - 1]);
             system(tmp);
             data = fopen("./datapoints/tao_distance/ellipse.dat", "r");
             flag = 'e';
             break;
         case 'p':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
             sprintf(tmp, "./shape_datapoint_generator/cardioid %s", argv[argc - 1]);
             system(tmp);
             data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
             flag = 'p';
             break;
         case 's':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
             sprintf(tmp, "./shape_datapoint_generator/square %s", argv[argc - 1]);
             system(tmp);
             data = fopen("./datapoints/tao_distance/square.dat", "r");
             flag = 's';
             break;
         case 't':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
             sprintf(tmp, "./shape_datapoint_generator/triangle %s", argv[argc - 1]);
             system(tmp);
             data = fopen("./datapoints/tao_distance/triangle.dat", "r");
             flag = 't';
             break;
         case 'h':
-            printf("Enter one of the following flags, followed by the number of datapoints to generate: -c for a circle, -s for a square, or -e for an ellipse\n");
+            printf("HELP SCREEN:\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for a circle,\n-e for an ellipse,\n-s for a square, or\n-t for a triangle\n\n");
+            printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted. Also GNUplot will not plot datasets less than 10 (it results in a segfault upon fclose()). Thus even though the number of datapoints the algorithm can handle can be any number, however this program can only plot datasets greater than 10.\n\n");
             return 0;
         }
     }
@@ -191,11 +208,12 @@ int main(int argc, char *argv[])
     /* runs tao-distance algorithm on data */
     distance = shortest_path(point[start], start, point, shortest, size - 1, gnu_files);
     printf("\n");
+    /* for printing the path (integer indices)
     printf("Shortest Path:\n");
     for(i = 0; i < (size - 1); i++) {
         printf("%d->", shortest[i]);
     }
-    printf("%d\n\n", shortest[i]);
+    printf("%d\n\n", shortest[i]);*/
     printf("Distance: %lf\n\n", distance);
     printf("Total Permutations: %d\n", global_count);
     printf("\n");
