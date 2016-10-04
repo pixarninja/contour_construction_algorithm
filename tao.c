@@ -99,6 +99,8 @@ int main(int argc, char *argv[])
             flag = 'p';
             break;
         case 's':
+            sprintf(tmp, "./shape_datapoint_generator/square %s", argv[argc - 1]);
+            system(tmp);
             data = fopen("./datapoints/tao_distance/square.dat", "r");
             flag = 's';
             break;
@@ -329,7 +331,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
             /* for debugging tao-distance function */
-            print_k(k);
+            //print_k(k);
             i++;
             count++;
         }
