@@ -405,6 +405,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     shortest[global_count] = best.index;
     /* final point */
     fprintf(gnu_files[2], "%lf %lf\n", end.x, end.y);
+    total += distance_p(best, end);
     /* plot */
     fprintf(gnu_files[0], "plot './gnu_files/lines.tmp' with lines ls 1 title \"shortest path\",");
     fprintf(gnu_files[0], "'./gnu_files/points.tmp' using 1:2 with points pt 7 notitle,");
