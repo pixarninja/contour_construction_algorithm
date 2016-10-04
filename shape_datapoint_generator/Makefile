@@ -1,16 +1,19 @@
 CC=gcc
 CFLAGS=-g -Wall
 
-all: circle cardioid ellipse
+all: circle cardioid ellipse triangle
 
 circle:
 	$(CC) $(CFLAGS) circle.c -o circle -lm
 
-ellipse:
-	$(CC) $(CFLAGS) ellipse.c -o ellipse -lm
-
 cardioid:
 	$(CC) $(CFLAGS) cardioid.c -o cardioid -lm
 
+ellipse:
+	$(CC) $(CFLAGS) ellipse.c -o ellipse -lm
+
+triangle:
+	$(CC) $(CFLAGS) triangle.c -o triangle -lm
+
 clean: 
-	rm circle cardioid ellipse
+	rm circle cardioid ellipse triangle
