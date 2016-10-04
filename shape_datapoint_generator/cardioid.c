@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define SIZE 100
-
 struct point_t {
     double x;
     double y;
@@ -11,14 +9,25 @@ struct point_t {
 
 struct point_t cardioid(double r, double theta);
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    FILE *shape = fopen("../datapoints/tao_distance/cardioid.dat", "w");
-    struct point_t *point = malloc(sizeof(struct point_t) * SIZE);
+    int size;
+    FILE *shape = fopen("./datapoints/tao_distance/cardioid.dat", "w");
+    if(shape == NULL) {
+        printf("File not found. Exiting Program. Good Day.\n");
+        exit(EXIT_FAILURE);
+    }
+    struct point_t *point;
     int i = 0;
-    for(; i < SIZE; i++) {
-        /* stores the point corresponding to i/32ths of a circle*/
-        point[i] = cardioid(4, 2*i*M_PI/SIZE);
+    if(argc == 1) {
+        size = 100;
+    }
+    else {
+        size = atoi(argv[argc - 1]);
+    }
+    point = malloc(sizeof(struct point_t) * size);
+    for(; i < size; i++) {
+        point[i] = cardioid(4, 2*i*M_PI/size);
         fprintf(shape, "%d: (%lf, %lf)\n", i, point[i].x, point[i].y);
     }
     fclose(shape);

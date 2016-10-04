@@ -17,7 +17,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
-#define NUM_FILES 3
+#define NUM_FILES 4
 
 struct point_t {
     double x;
@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
     struct point_t *point;
     int *shortest;
     char buf[1024];
+    char tmp[1024];
     double distance = 0.0;
     double range = 0.0;
     int size = 0;
@@ -70,12 +71,18 @@ int main(int argc, char *argv[])
     int c;
     int flag;
     if(argc == 1) {
-        printf("Shape option [c s p] or help screen [h] not chosen.\nExiting program. Good day.\n");
+        printf("Shape option [c s e] or help screen [h] not chosen.\nExiting program. Good day.\n");
         exit(EXIT_FAILURE);
     }
-    while ((c = getopt(argc, argv, "csph")) != -1) {
+    else if(argc == 2) {
+        printf("Number of datapoints to generate not chosen, use -h for more information.\nExiting program. Good day.\n");
+        exit(EXIT_FAILURE);
+    }
+    while ((c = getopt(argc, argv, "cseph")) != -1) {
         switch (c) {
         case 'c':
+            sprintf(tmp, "./shape_datapoint_generator/circle %s", argv[argc - 1]);
+            system(tmp);
             data = fopen("./datapoints/tao_distance/circle.dat", "r");
             flag = 'c';
             break;
@@ -83,18 +90,27 @@ int main(int argc, char *argv[])
             data = fopen("./datapoints/tao_distance/square.dat", "r");
             flag = 's';
             break;
+        case 'e':
+            sprintf(tmp, "./shape_datapoint_generator/ellipse %s", argv[argc - 1]);
+            system(tmp);
+            data = fopen("./datapoints/tao_distance/ellipse.dat", "r");
+            flag = 'e';
+            break;
         case 'p':
+            sprintf(tmp, "./shape_datapoint_generator/cardioid %s", argv[argc - 1]);
+            system(tmp);
             data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
             flag = 'p';
             break;
         case 'h':
-            printf("Enter -c for a circle, -s for a square, or -p for a cardioid\n");
+            printf("Enter one of the following flags, followed by the number of datapoints to generate: -c for a circle, -s for a square, or -e for an ellipse\n");
             return 0;
         }
     }
     gnu_files[0] = fopen ("./gnu_files/commands.tmp", "w+");
     gnu_files[1] = fopen("./gnu_files/points.tmp", "w+");
     gnu_files[2] = fopen("./gnu_files/lines.tmp", "w+");
+    gnu_files[3] = fopen("./gnu_files/tmp.tmp", "w+");
     while(fgets(buf, 1024, data)) {
         size++;
     }
@@ -107,6 +123,9 @@ int main(int argc, char *argv[])
             break;
         case 's':
             data = fopen("./datapoints/tao_distance/square.dat", "r");
+            break;
+        case 'e':
+            data = fopen("./datapoints/tao_distance/ellipse.dat", "r");
             break;
         case 'p':
             data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
@@ -282,8 +301,14 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             k.T2.length = length_v(k.T2);
             /* -- initializing tao, theta, and curvature */
             k.tao = (dot_product(k.T1, k.T2)); //length of T1 and T2 is always 1
-            if((k.tao >= 0.0) && (k.tao <= 0.0)) {
+            /*if((k.tao >= 0.0) && (k.tao <= 0.0)) {
                 k.tao = 0.1;
+            }*/
+            if(k.tao <= -1.0) {
+                k.tao = -1.0;
+            }
+            else if(k.tao >= 1.0) {
+                k.tao = 1.0;
             }
             k.theta = calculate_theta(k);
             k.curvature = calculate_curvature(k);
@@ -295,7 +320,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
             /* for debugging tao-distance function */
-            //print_k(k);
+            print_k(k);
             i++;
             count++;
         }
@@ -341,7 +366,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         k.T1.point[0].index = best.index;
         k.T1.point[1].x = best.x + k.T2.i;
         k.T1.point[1].y = best.y + k.T2.j;
-        k.T1.point[1].index = 'T';
+        k.T1.point[1].index = INT_MAX;
         k.T1.i = (k.T1.point[1].x - k.T1.point[0].x);
         k.T1.j = (k.T1.point[1].y - k.T1.point[0].y);
         k.T1.length = length_v(k.T1);
@@ -391,7 +416,7 @@ double calculate_theta(struct curvature_t k)
 /* calculates distance given index and structure */
 double tao_distance(struct curvature_t k)
 {
-    return (k.V.length * (k.curvature + 0.000001));
+    return (k.V.length * (k.curvature + 0.000001) - k.tao);
 }
 
 /* calculates angle between two vectors */
@@ -441,11 +466,11 @@ double dot_product(struct vector_t start, struct vector_t end)
 /* prints structure k for debugging */
 void print_k(struct curvature_t k)
 {
-    printf("%d:(%lf, %lf), %d:(%lf, %lf), V:<%lf, %lf>, |V| = %lf\n", k.V.point[0].index, k.V.point[0].x, k.V.point[0].y, k.V.point[1].index, k.V.point[1].x, k.V.point[1].y, k.V.i, k.V.j, k.V.length);
-    printf("%d[0]:(%lf, %lf), %d[1](%lf, %lf), T1:<%lf, %lf>, |T1| = %lf\n", k.T1.point[0].index, k.T1.point[0].x, k.T1.point[0].y, k.T1.point[1].index, k.T1.point[1].x, k.T1.point[1].y, k.T1.i, k.T1.j, k.T1.length);
-    printf("%d[0]:(%lf, %lf), %d[1](%lf, %lf), T2:<%lf, %lf>, |T2| = %lf\n", k.T2.point[0].index, k.T2.point[0].x, k.T2.point[0].y, k.T2.point[1].index, k.T2.point[1].x, k.T2.point[1].y, k.T2.i, k.T2.j, k.T2.length);
+    printf("V: %d[0](%lf, %lf), %d[1](%lf, %lf), <%lf, %lf>, |V| = %lf\n", k.V.point[0].index, k.V.point[0].x, k.V.point[0].y, k.V.point[1].index, k.V.point[1].x, k.V.point[1].y, k.V.i, k.V.j, k.V.length);
+    printf("T1: point[0](%lf, %lf), point[1](%lf, %lf), <%lf, %lf>, |T1| = %lf\n", k.T1.point[0].x, k.T1.point[0].y, k.T1.point[1].x, k.T1.point[1].y, k.T1.i, k.T1.j, k.T1.length);
+    printf("T2: point[0](%lf, %lf), point[1](%lf, %lf), <%lf, %lf>, |T2| = %lf\n", k.T2.point[0].x, k.T2.point[0].y, k.T2.point[1].x, k.T2.point[1].y, k.T2.i, k.T2.j, k.T2.length);
     printf("curvature: %lf; ", k.curvature);
-    printf("angle = %lf; ", k.theta * 90 / M_PI);
+    printf("angle = %lf; ", k.theta * 180 / M_PI);
     printf("tao = %lf; ", k.tao);
     printf("tao-distance = %lf\n\n", k.V.point[1].tao_d);
 }
