@@ -1,12 +1,37 @@
 /**
- * Calculates the roundest path between the points using only curvature;
- * equates to the shortest path for a dataset of a "round" shape. I have
- * named this method of computation as "tao-distance", because it deals
- * with calculating a constant outlined below:
+ * BRIEF:
+ * This algorithm calculates the shortest path between a set of data
+ * using only curvature. I have named this method of computation
+ * "Tao Distance", because it deals with calculating a constant defined 
+ * below:
  *
- *    tao = ...
+ *    tao = dot_product(T1, T2)/(T1.length * T2.length)
  *
- * Thus
+ * T1 and T2 are unit tangent vectors calculated by the program. Since
+ * T1 and T2 are unit vectors, we can write tao as:
+ *
+ *    tao = dot_product(T1, T2)
+ *    
+ * we then calculate curvature by using the length of the displacement
+ * vector (T2 - T1) divided by the angle between T2 and T1. The final
+ * Tao-Distance Equation is defined below:
+ *
+ *    tao-distance = V.length * (curvature + 0.000001) - tao
+ *
+ * Thus the program calculates this distance for each possibility,
+ * chooses the point with the smallest Tao Distance, and builds the
+ * path without having to compare the found path with any others.
+ * 
+ * This program is designed to work for "round datasets", meaning the
+ * optimal solution will be a convex shape. This algorithm is less
+ * accurate for shapes that have concave features, or for shapes that
+ * contain points "inside" them.
+ * 
+ * TODO:
+ * My goal with this algorithm is to be able to reconstruct a planar
+ * shape given only its vertices. The next step is to write a .mel or
+ * C++ script as a plugin for Autodesk Maya, implementing this algorithm
+ * to construct (or re-construct) 3D objects.
  */
 
 #include <stdio.h>
@@ -312,9 +337,6 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             k.T2.length = length_v(k.T2);
             /* -- initializing tao, theta, and curvature */
             k.tao = (dot_product(k.T1, k.T2)); //length of T1 and T2 is always 1
-            /*if((k.tao >= 0.0) && (k.tao <= 0.0)) {
-                k.tao = 0.1;
-            }*/
             if(k.tao <= -1.0) {
                 k.tao = -1.0;
             }
@@ -330,8 +352,8 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             /* calculating tao-distance */
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
-            /* for debugging tao-distance function */
-            //print_k(k);
+            /* for debugging tao-distance function
+            print_k(k); */
             i++;
             count++;
         }
