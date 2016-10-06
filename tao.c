@@ -2,9 +2,8 @@
  * BRIEF:
  * This algorithm calculates the shortest path between a set of data
  * using only curvature. I have named this method of computation
- * "Tao Distance", because it deals with calculating a constant defined 
- * below:
- *
+ * "Tao Distance", because it deals with calculating a constant defined * below:
+ * 
  *    tao = dot_product(T1, T2)/(T1.length * T2.length)
  *
  * T1 and T2 are unit tangent vectors calculated by the program. Since
@@ -30,8 +29,10 @@
  * TODO:
  * My goal with this algorithm is to be able to reconstruct a planar
  * shape given only its vertices. The next step is to write a .mel or
- * C++ script as a plugin for Autodesk Maya, implementing this algorithm
- * to construct (or re-construct) 3D objects.
+ * C++ script as a plugin for Autodesk Maya, implementing this
+ * algorithm to construct (or re-construct) 3D objects. Some
+ * applications of this would be polarization of U/V components on
+ * objects (both polygons and NURBS), or dynamic modeling of objects.
  */
 
 #include <stdio.h>
@@ -96,11 +97,31 @@ int main(int argc, char *argv[])
     int c;
     int flag;
     if(argc == 1) {
-        printf("Shape option [c s e] or help screen [h] not chosen.\nExiting program. Good day.\n");
+        printf("\nShape option flag [c e s t] or help screen flag [h] not chosen.\n\nExiting program. Good day.\n\n");
         return 0;
     }
-    while ((c = getopt(argc, argv, "cepsth")) != -1) {
+    while ((c = getopt(argc, argv, "23cepsth")) != -1) {
         switch (c) {
+        case '2':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
+            sprintf(tmp, "./shape_datapoint_generator/two_circles %s", argv[argc - 1]);
+            system(tmp);
+            data = fopen("./datapoints/tao_distance/two_circles.dat", "r");
+            flag = '2';
+            break;
+        case '3':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
+            sprintf(tmp, "./shape_datapoint_generator/three_circles %s", argv[argc - 1]);
+            system(tmp);
+            data = fopen("./datapoints/tao_distance/three_circles.dat", "r");
+            flag = '3';
+            break;
         case 'c':
             if(argc == 2) {
                 printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
@@ -152,8 +173,8 @@ int main(int argc, char *argv[])
             flag = 't';
             break;
         case 'h':
-            printf("HELP SCREEN:\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for a circle,\n-e for an ellipse,\n-s for a square, or\n-t for a triangle\n\n");
-            printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted. Also GNUplot will not plot datasets less than 10 (it results in a segfault upon fclose()). Thus even though the number of datapoints the algorithm can handle can be any number, however this program can only plot datasets greater than 10.\n\n");
+            printf("\nHELP SCREEN:\n\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for a circle,\n-e for an ellipse,\n-s for a square, or\n-t for a triangle\n\n");
+            printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted. Also GNUplot will not plot datasets less than 10 (it results in a segfault upon fclose()). Thus even though the number of datapoints the algorithm can handle can be any number, this program can only plot datasets greater than 10.\n\n");
             return 0;
         }
     }
@@ -168,6 +189,12 @@ int main(int argc, char *argv[])
     point = malloc(sizeof(struct point_t) * size);
     shortest = malloc(sizeof(int) * size);
     switch(flag) {
+        case '2':
+            data = fopen("./datapoints/tao_distance/two_circles.dat", "r");
+            break;
+        case '3':
+            data = fopen("./datapoints/tao_distance/three_circles.dat", "r");
+            break;
         case 'c':
             data = fopen("./datapoints/tao_distance/circle.dat", "r");
             break;
@@ -238,11 +265,13 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     double sum_y = 0.0;
     double theta = DBL_MAX;
     double tmp = 0.0;
+    int *visited = calloc(size, sizeof(int) * size);
     int i;
     int j;
     int index;
     int count = 0;
     int total_size = size - 1;
+    int num_points;
     best.x = DBL_MAX;
     best.y = DBL_MAX;
     best.tao_d = DBL_MAX;
@@ -264,7 +293,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     initial.point[1].y = start.y + initial.j;
     initial.point[1].index = INT_MAX;
     initial.length = length_v(initial);
-    /* remove start index from search */
+    /* remove start index from search
     for(i = 0; i <= size; i++) {
         if(search[i].index == start.index) {
             for(j = i; j < size; j++) {
@@ -273,7 +302,9 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             break;
         }
     }
-    size--;
+    size--;*/
+    /* store start index in a visted-array */
+    visited[start.index] = 1;
     /* initializing structure curr */
     struct point_t *curr = malloc(sizeof(struct point_t) * size);
     for(i = 0; i <= size; i++) {
@@ -299,6 +330,10 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
        the position vector of the starting point (selects the "second"
        point) */
     for(i = 0; i <= size; i ++) {
+        /* skip the starting point */
+        if(search[i].index == start.index) {
+            continue;
+        }
         check.point[0].x = start.x;
         check.point[0].y = start.y;
         check.point[0].index = start.index;
@@ -325,6 +360,9 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     k.T2.point[0].x = start.x;
     k.T2.point[0].y = start.y;
     k.T2.point[0].index = start.index;
+    /* stores visted points */
+    visited[start.index] = 1;
+    index = start.index;
     /* normalizes n, if n is not already an index within the new size */
     n %= total_size;
     /* plot */
@@ -334,8 +372,16 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         i = 0;
         /* refreshing best index */
         best.tao_d = DBL_MAX;
+        best.index = start.index;
         /* loops through all possible indices from start */
         while(count <= size) {
+            /* skip best index */
+            if(search[i].index == best.index) {
+                curr[i].tao_d = DBL_MAX;
+                i++;
+                count++;
+                continue;
+            }
             /* initializing point 2 data for structure k
                -- initializing vector V */
             k.V.point[1].x = search[i].x;
@@ -371,7 +417,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
             /* for debugging tao-distance function
-            print_k(k); */
+            print_k(k);*/
             i++;
             count++;
         }
@@ -385,18 +431,115 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
                 n = i;
             }
         }
+        /* if the best point is a point that has already been visited */
+        if(visited[n] == 1) {
+            /* plot */
+            fprintf(gnu_files[2], "%lf %lf\n", best.x, best.y);
+            fprintf(gnu_files[2], "\n");
+            /* finds starting point of the next curve */
+            for(j = 0; j <= size; j++) {
+                if(visited[j] == 0) {
+                    start = search[j];
+                    break;
+                }
+            }
+            /* sets new ending point */
+            end = start;
+            fprintf(gnu_files[2], "%lf %lf\n", start.x, start.y);
+            /* calculate new average point */
+            sum_x = 0;
+            sum_y = 0;
+            num_points = 0;
+            for(j = 0; j <= size; j++) {
+                if(visited[j] == 0) {
+                    sum_x += search[j].x;
+                    sum_y += search[j].y;
+                    num_points++;
+                }
+            }
+            center.x = sum_x / num_points;
+            center.y = sum_y / num_points;
+            visited[start.index] = 1;
+            /* initialize initial vector */
+            initial.point[0].x = start.x;
+            initial.point[0].y = start.y;
+            initial.point[0].index = start.index;
+            initial.i = (start.x - center.x) / distance_p(start, center);
+            initial.j = (start.y - center.y) / distance_p(start, center);
+            initial.point[1].x = start.x + initial.i;
+            initial.point[1].y = start.y + initial.j;
+            initial.point[1].index = INT_MAX;
+            initial.length = length_v(initial);
+            /* initializing point 1 data for structure k
+            -- initializing vector V */
+            k.V.point[0].x = start.x;
+            k.V.point[0].y = start.y;
+            k.V.point[0].index = start.index;
+            k.V.i = 0;
+            k.V.j = 0;
+            k.V.length = 0;
+            /* -- initializing vector T1 */
+            k.T1.point[0].x = start.x;
+            k.T1.point[0].y = start.y;
+            k.T1.point[0].index = start.index;
+            /* checks for the point with the smallest deviation in angle from
+               the position vector of the starting point (selects the "second"
+               point) */
+            theta = DBL_MAX;
+            for(j = 0; j <= size; j++) {
+                /* skip the starting point */
+                if(search[j].index != start.index) {
+                    /* only check unvisited points */
+                    if(visited[j] == 0) {
+                        check.point[0].x = start.x;
+                        check.point[0].y = start.y;
+                        check.point[0].index = start.index;
+                        check.point[1].x = search[j].x;
+                        check.point[1].y = search[j].y;
+                        check.point[1].index = search[j].index;
+                        check.i = check.point[1].x - check.point[0].x;
+                        check.j = check.point[1].y - check.point[0].y;
+                        check.length = length_v(check);
+                        tmp = angle_v(initial, check);
+                        if(tmp < theta) {
+                            theta = tmp;
+                            index = j;
+                        }
+                    }
+                }
+            }
+            /* points T1 in the direction of the "second point" */
+            k.T1.i = (search[index].x - start.x) / distance_p(search[index], start);
+            k.T1.j = (search[index].y - start.y) / distance_p(search[index], start);
+            k.T1.point[1].x = start.x + k.T1.i;
+            k.T1.point[1].y = start.y + k.T1.j;
+            k.T1.point[1].index = INT_MAX;
+            k.T1.length = 1;
+            /* -- initializing vector T2 */
+            k.T2.point[0].x = start.x;
+            k.T2.point[0].y = start.y;
+            k.T2.point[0].index = start.index;
+            /* stores index of the starting point */
+            index = start.index;
+            /* normalizes n, if n is not already an index within the new size */
+            n %= total_size;
+            count = 0;
+            global_count++;
+            continue;
+        }
+        visited[n] = 1;
         shortest[global_count] = start.index;
         total += distance_p(start, best);
         /* plot */
         fprintf(gnu_files[2], "%lf %lf\n", best.x, best.y);
-        /* remove chosen point from search array */
+        /* remove chosen point from search array
         for(i = n; i < size; i++) {
             search[i].x = search[i + 1].x;
             search[i].y = search[i + 1].y;
             search[i].index = search[i + 1].index;
             search[i].tao_d = search[i + 1].tao_d;
         }
-        size--;
+        size--;*/
         /* reinitializing structure k
            -- reinitializing vector V */
         k.V.point[1].x = best.x;
@@ -408,7 +551,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         /* -- reinitializing vector T1 */
         k.T2.point[1].x = best.x;
         k.T2.point[1].y = best.y;
-        k.T2.point[1].index = 'T';
+        k.T2.point[1].index = INT_MAX;
         k.T2.i = (k.T2.point[1].x - k.T2.point[0].x) / k.V.length;
         k.T2.j = (k.T2.point[1].y - k.T2.point[0].y) / k.V.length;
         k.T2.length = length_v(k.T2);
