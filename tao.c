@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
         printf("\nShape option flag [c e s t] or help screen flag [h] not chosen.\n\nExiting program. Good day.\n\n");
         return 0;
     }
-    while ((c = getopt(argc, argv, "23cepsth")) != -1) {
+    while ((c = getopt(argc, argv, "23cdepsth")) != -1) {
         switch (c) {
         case '2':
             if(argc == 2) {
@@ -131,6 +131,16 @@ int main(int argc, char *argv[])
             system(tmp);
             data = fopen("./datapoints/tao_distance/circle.dat", "r");
             flag = 'c';
+            break;
+        case 'd':
+            if(argc == 2) {
+                printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
+                return 0;
+            }
+            sprintf(tmp, "./shape_datapoint_generator/donut %s", argv[argc - 1]);
+            system(tmp);
+            data = fopen("./datapoints/tao_distance/donut.dat", "r");
+            flag = 'd';
             break;
         case 'e':
             if(argc == 2) {
@@ -198,6 +208,9 @@ int main(int argc, char *argv[])
         case 'c':
             data = fopen("./datapoints/tao_distance/circle.dat", "r");
             break;
+        case 'd':
+            data = fopen("./datapoints/tao_distance/donut.dat", "r");
+            break;
         case 'e':
             data = fopen("./datapoints/tao_distance/ellipse.dat", "r");
             break;
@@ -259,6 +272,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     struct vector_t check;
     struct point_t best;
     struct point_t end = start;
+    struct point_t prev = start;
     struct point_t center;
     double total = 0.0;
     double sum_x = 0.0;
@@ -366,7 +380,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     /* normalizes n, if n is not already an index within the new size */
     n %= total_size;
     /* plot */
-    fprintf(gnu_files[2], "%lf %lf\n", start.x, start.y);
+    fprintf(gnu_files[2], "%lf %lf %d\n", start.x, start.y, start.index);
     /* outer loop, calculates total distance */
     while(global_count <= total_size) {
         i = 0;
@@ -375,8 +389,8 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         best.index = start.index;
         /* loops through all possible indices from start */
         while(count <= size) {
-            /* skip best index */
-            if(search[i].index == best.index) {
+            /* skip current index and previous index */
+            if((search[i].index == best.index) || (search[i].index == prev.index)) {
                 curr[i].tao_d = DBL_MAX;
                 i++;
                 count++;
@@ -416,11 +430,13 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             /* calculating tao-distance */
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
-            /* for debugging tao-distance function
-            print_k(k);*/
+            /* for debugging tao-distance function */
+            print_k(k);
             i++;
             count++;
         }
+        /* sets the previous point as the previous best point */
+        prev = best;
         /* find point with the lowest tao-distance */
         for(i = 0; i <= size; i++) {
             if(best.tao_d > curr[i].tao_d) {
@@ -434,7 +450,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         /* if the best point is a point that has already been visited */
         if(visited[n] == 1) {
             /* plot */
-            fprintf(gnu_files[2], "%lf %lf\n", best.x, best.y);
+            fprintf(gnu_files[2], "%lf %lf %d\n", best.x, best.y, best.index);
             fprintf(gnu_files[2], "\n");
             /* finds starting point of the next curve */
             for(j = 0; j <= size; j++) {
@@ -445,7 +461,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             }
             /* sets new ending point */
             end = start;
-            fprintf(gnu_files[2], "%lf %lf\n", start.x, start.y);
+            fprintf(gnu_files[2], "%lf %lf %d\n", start.x, start.y, start.index);
             /* calculate new average point */
             sum_x = 0;
             sum_y = 0;
@@ -487,8 +503,8 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
                point) */
             theta = DBL_MAX;
             for(j = 0; j <= size; j++) {
-                /* skip the starting point */
-                if(search[j].index != start.index) {
+                /* skip the starting point and the previous point */
+                if((search[j].index != start.index) || (search[j].index != prev.index)) {
                     /* only check unvisited points */
                     if(visited[j] == 0) {
                         check.point[0].x = start.x;
@@ -531,7 +547,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         shortest[global_count] = start.index;
         total += distance_p(start, best);
         /* plot */
-        fprintf(gnu_files[2], "%lf %lf\n", best.x, best.y);
+        fprintf(gnu_files[2], "%lf %lf %d\n", best.x, best.y, best.index);
         /* remove chosen point from search array
         for(i = n; i < size; i++) {
             search[i].x = search[i + 1].x;
@@ -587,10 +603,10 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     }
     shortest[global_count] = best.index;
     /* final point */
-    fprintf(gnu_files[2], "%lf %lf\n", end.x, end.y);
+    fprintf(gnu_files[2], "%lf %lf %d\n", end.x, end.y, end.index);
     total += distance_p(best, end);
     /* plot */
-    fprintf(gnu_files[0], "plot './gnu_files/lines.tmp' with lines ls 1 title \"shortest path\",");
+    fprintf(gnu_files[0], "plot './gnu_files/lines.tmp' using 1:2 with lines ls 1 title \"shortest path\",");
     fprintf(gnu_files[0], "'./gnu_files/points.tmp' using 1:2 with points pt 7 notitle,");
     fprintf(gnu_files[0], "'' using 1:2:3 with labels point pt 7 offset char -1,-1 notitle\n");
     return total;
