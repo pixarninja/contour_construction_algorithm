@@ -1,16 +1,16 @@
 CC=gcc
 CFLAGS=-g -Wall
 
-all: tao tao2 shortest
+all: contours tao2 shortest
 
 shortest:
 	$(CC) $(CFLAGS) shortest.c -o shortest -lm
 
-tao:
-	$(CC) $(CFLAGS) tao.c -o tao -lm
+contours:
+	$(CC) $(CFLAGS) construct_contours.c -o construct_contours -lm
 
 tao2:
 	$(CC) $(CFLAGS) tao2.c -o tao2 -lm
 
 clean: 
-	rm shortest tao tao2
+	rm shortest construct_contours tao2

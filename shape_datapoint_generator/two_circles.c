@@ -21,6 +21,7 @@ int main(int argc, char *argv[])
     }
     struct point_t *point;
     int i = 0;
+    double r = 6;
     if(argc == 1) {
         size = 100;
     }
@@ -33,13 +34,16 @@ int main(int argc, char *argv[])
     else {
         size_a = (size / 2) + 1;
     }
+    if(size > 100) {
+        r *= (size / 10);
+    }
     point = malloc(sizeof(struct point_t) * size);
     for(; i < size_a; i++) {
-        point[i] = circle_1(4, 2*i*M_PI/size_a);
+        point[i] = circle_1(r, 2*i*M_PI/size_a);
         fprintf(shape, "%d: (%lf, %lf)\n", i, point[i].x, point[i].y);
     }
     for(; i < size; i++) {
-        point[i] = circle_2(4, 2*i*M_PI/(size - size_a));
+        point[i] = circle_2(r, 2*(i - size_a)*M_PI/(size - size_a));
         fprintf(shape, "%d: (%lf, %lf)\n", i, point[i].x, point[i].y);
     }
     fclose(shape);
@@ -49,15 +53,15 @@ int main(int argc, char *argv[])
 struct point_t circle_1(double r, double theta)
 {
     struct point_t point;
-    point.x = r*cos(theta) + 6;
-    point.y = r*sin(theta) - 6;
+    point.x = r*cos(theta) + r;
+    point.y = r*sin(theta) - r;
     return point;
 }
 
 struct point_t circle_2(double r, double theta)
 {
     struct point_t point;
-    point.x = r*cos(theta) - 6;
-    point.y = r*sin(theta) + 6;
+    point.x = r*cos(theta) - r;
+    point.y = r*sin(theta) + r;
     return point;
 }

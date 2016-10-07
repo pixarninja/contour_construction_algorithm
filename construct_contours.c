@@ -1,21 +1,23 @@
 /**
  * BRIEF:
  * This algorithm calculates the shortest path between a set of data
- * using only curvature. I have named this method of computation
- * "Tao Distance", because it deals with calculating a constant defined * below:
+ * using only curvature. I have named this method of distance computation
+ * "Tao Distance", because it deals with calculating a constant defined
+ * below:
  * 
- *    tao = dot_product(T1, T2)/(T1.length * T2.length)
+ *    Tao = dot_product(T1, T2)/(T1.length * T2.length)
  *
- * T1 and T2 are unit tangent vectors calculated by the program. Since
- * T1 and T2 are unit vectors, we can write tao as:
+ * T1 and T2 are unit tangent vectors calculated by the program. But since
+ * the length of a unit vector is 1, we can write tao as:
  *
- *    tao = dot_product(T1, T2)
+ *    Tao = dot_product(T1, T2)
  *    
  * we then calculate curvature by using the length of the displacement
- * vector (T2 - T1) divided by the angle between T2 and T1. The final
- * Tao-Distance Equation is defined below:
+ * vector (T2 - T1) divided by the angle between T2 and T1. Tao
+ * is used to simplify the calculation of the angle between the two unit
+ * tangent vectors. The final Tao-Distance Equation is defined below:
  *
- *    tao-distance = V.length * (curvature + 0.000001) - tao
+ *    Tao-Distance = V.length + curvature
  *
  * Thus the program calculates this distance for each possibility,
  * chooses the point with the smallest Tao Distance, and builds the
@@ -28,11 +30,13 @@
  * 
  * TODO:
  * My goal with this algorithm is to be able to reconstruct a planar
- * shape given only its vertices. The next step is to write a .mel or
- * C++ script as a plugin for Autodesk Maya, implementing this
- * algorithm to construct (or re-construct) 3D objects. Some
- * applications of this would be polarization of U/V components on
- * objects (both polygons and NURBS), or dynamic modeling of objects.
+ * shape given only its vertices. I have achieved this goal, as proven
+ * by the various test cases (which are set as flags) for the program.
+ * The next step is to write a MEL or C++ script as a plugin for
+ * Autodesk Maya, implementing this algorithm to construct (or re-
+ * construct) 3D polygons. Some applications of this would be
+ * polarization of U/V components on objects (both polygons and NURBS),
+ * or dynamic modeling of polygons at rendertime.
  */
 
 #include <stdio.h>
@@ -97,7 +101,7 @@ int main(int argc, char *argv[])
     int c;
     int flag;
     if(argc == 1) {
-        printf("\nShape option flag [c e s t] or help screen flag [h] not chosen.\n\nExiting program. Good day.\n\n");
+        printf("\nShape option flag [2 3 c d e s t] or help screen flag [h] not chosen.\n\nExiting program. Good day.\n\n");
         return 0;
     }
     while ((c = getopt(argc, argv, "23cdepsth")) != -1) {
@@ -183,7 +187,7 @@ int main(int argc, char *argv[])
             flag = 't';
             break;
         case 'h':
-            printf("\nHELP SCREEN:\n\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for a circle,\n-e for an ellipse,\n-s for a square, or\n-t for a triangle\n\n");
+            printf("\nHELP SCREEN:\n\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for one circle,\n-2 for two circles,\n-3 for three circles,\n-d for a donut,\n-e for an ellipse,\n-s for a square, or\n-t for a triangle\n\n");
             printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted. Also GNUplot will not plot datasets less than 10 (it results in a segfault upon fclose()). Thus even though the number of datapoints the algorithm can handle can be any number, this program can only plot datasets greater than 10.\n\n");
             return 0;
         }
@@ -225,11 +229,11 @@ int main(int argc, char *argv[])
             break;
     }
     while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
-        if(abs(point[i].x) > range) {
-            range = abs(point[i].x);
+        if(fabs(point[i].x) > range) {
+            range = fabs(point[i].x);
         }
-        if(abs(point[i].y) > range) {
-            range = abs(point[i].y);
+        if(fabs(point[i].y) > range) {
+            range = fabs(point[i].y);
         }
         i++;
     }
@@ -307,16 +311,6 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     initial.point[1].y = start.y + initial.j;
     initial.point[1].index = INT_MAX;
     initial.length = length_v(initial);
-    /* remove start index from search
-    for(i = 0; i <= size; i++) {
-        if(search[i].index == start.index) {
-            for(j = i; j < size; j++) {
-                search[j] = search[j + 1];
-            }
-            break;
-        }
-    }
-    size--;*/
     /* store start index in a visted-array */
     visited[start.index] = 1;
     /* initializing structure curr */
@@ -430,8 +424,8 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             /* calculating tao-distance */
             curr[i].tao_d = tao_distance(k);
             k.V.point[1].tao_d = curr[i].tao_d;
-            /* for debugging tao-distance function */
-            print_k(k);
+            /* for debugging tao-distance function
+            print_k(k);*/
             i++;
             count++;
         }
@@ -449,6 +443,8 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         }
         /* if the best point is a point that has already been visited */
         if(visited[n] == 1) {
+            /* debug message
+            printf("\nIF STATEMENT ENTERED\n");*/
             /* plot */
             fprintf(gnu_files[2], "%lf %lf %d\n", best.x, best.y, best.index);
             fprintf(gnu_files[2], "\n");
@@ -627,7 +623,7 @@ double calculate_theta(struct curvature_t k)
 /* calculates distance given index and structure */
 double tao_distance(struct curvature_t k)
 {
-    return (k.V.length * (k.curvature + 0.000001) - k.tao);
+    return (k.V.length + k.curvature);
 }
 
 /* calculates angle between two vectors */
