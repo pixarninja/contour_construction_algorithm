@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/two_circles %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/two_circles.dat", "r");
+            data = fopen("./datapoints/two_circles.dat", "r");
             flag = '2';
             break;
         case '3':
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/three_circles %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/three_circles.dat", "r");
+            data = fopen("./datapoints/three_circles.dat", "r");
             flag = '3';
             break;
         case 'c':
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/circle %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/circle.dat", "r");
+            data = fopen("./datapoints/circle.dat", "r");
             flag = 'c';
             break;
         case 'd':
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/donut %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/donut.dat", "r");
+            data = fopen("./datapoints/donut.dat", "r");
             flag = 'd';
             break;
         case 'e':
@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/ellipse %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/ellipse.dat", "r");
+            data = fopen("./datapoints/ellipse.dat", "r");
             flag = 'e';
             break;
         case 'p':
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/cardioid %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
+            data = fopen("./datapoints/cardioid.dat", "r");
             flag = 'p';
             break;
         case 's':
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/square %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/square.dat", "r");
+            data = fopen("./datapoints/square.dat", "r");
             flag = 's';
             break;
         case 't':
@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
             }
             sprintf(tmp, "./shape_datapoint_generator/triangle %s", argv[argc - 1]);
             system(tmp);
-            data = fopen("./datapoints/tao_distance/triangle.dat", "r");
+            data = fopen("./datapoints/triangle.dat", "r");
             flag = 't';
             break;
         case 'h':
@@ -204,28 +204,28 @@ int main(int argc, char *argv[])
     shortest = malloc(sizeof(int) * size);
     switch(flag) {
         case '2':
-            data = fopen("./datapoints/tao_distance/two_circles.dat", "r");
+            data = fopen("./datapoints/two_circles.dat", "r");
             break;
         case '3':
-            data = fopen("./datapoints/tao_distance/three_circles.dat", "r");
+            data = fopen("./datapoints/three_circles.dat", "r");
             break;
         case 'c':
-            data = fopen("./datapoints/tao_distance/circle.dat", "r");
+            data = fopen("./datapoints/circle.dat", "r");
             break;
         case 'd':
-            data = fopen("./datapoints/tao_distance/donut.dat", "r");
+            data = fopen("./datapoints/donut.dat", "r");
             break;
         case 'e':
-            data = fopen("./datapoints/tao_distance/ellipse.dat", "r");
+            data = fopen("./datapoints/ellipse.dat", "r");
             break;
         case 'p':
-            data = fopen("./datapoints/tao_distance/cardioid.dat", "r");
+            data = fopen("./datapoints/cardioid.dat", "r");
             break;
         case 's':
-            data = fopen("./datapoints/tao_distance/square.dat", "r");
+            data = fopen("./datapoints/square.dat", "r");
             break;
         case 't':
-            data = fopen("./datapoints/tao_distance/triangle.dat", "r");
+            data = fopen("./datapoints/triangle.dat", "r");
             break;
     }
     while(fscanf(data, "%d: (%lf, %lf)", &point[i].index, &point[i].x, &point[i].y) > 0) {
