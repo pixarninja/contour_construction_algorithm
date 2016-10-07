@@ -12,7 +12,7 @@ struct point_t ellipse(double a, double b, double theta);
 int main(int argc, char *argv[])
 {
     int size;
-    FILE *shape = fopen("./datapoints/tao_distance/ellipse.dat", "w");
+    FILE *shape = fopen("./datapoints/ellipse.dat", "w");
     if(shape == NULL) {
         printf("File not found. Exiting Program. Good Day.\n");
         exit(EXIT_FAILURE);

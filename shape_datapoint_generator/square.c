@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     int size_a;
     int size_b;
     int size_c;
-    FILE *shape = fopen("./datapoints/tao_distance/square.dat", "w");
+    FILE *shape = fopen("./datapoints/square.dat", "w");
     if(shape == NULL) {
         printf("File not found. Exiting Program. Good Day.\n");
         exit(EXIT_FAILURE);

@@ -12,7 +12,7 @@ struct point_t circle(double r, double theta);
 int main(int argc, char *argv[])
 {
     int size;
-    FILE *shape = fopen("./datapoints/tao_distance/circle.dat", "w");
+    FILE *shape = fopen("./datapoints/circle.dat", "w");
     if(shape == NULL) {
         printf("File not found. Exiting Program. Good Day.\n");
         exit(EXIT_FAILURE);

@@ -12,7 +12,7 @@ struct point_t cardioid(double r, double theta);
 int main(int argc, char *argv[])
 {
     int size;
-    FILE *shape = fopen("./datapoints/tao_distance/cardioid.dat", "w");
+    FILE *shape = fopen("./datapoints/cardioid.dat", "w");
     if(shape == NULL) {
         printf("File not found. Exiting Program. Good Day.\n");
         exit(EXIT_FAILURE);

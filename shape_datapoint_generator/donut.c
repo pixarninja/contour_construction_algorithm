@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 {
     int size;
     int size_a;
-    FILE *shape = fopen("./datapoints/tao_distance/donut.dat", "w");
+    FILE *shape = fopen("./datapoints/donut.dat", "w");
     if(shape == NULL) {
         printf("File not found. Exiting Program. Good Day.\n");
         exit(EXIT_FAILURE);
