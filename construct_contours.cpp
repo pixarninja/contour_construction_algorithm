@@ -103,10 +103,10 @@ int main(int argc, char *argv[])
     int c;
     int flag;
     if(argc == 1) {
-        printf("\nShape option flag [2 3 c d e s t] or help screen flag [h] not chosen.\n\nExiting program. Good day.\n\n");
+        printf("\nShape option flag [2 3 c d e m p s t] or help screen flag [h] not chosen.\n\nExiting program. Good day.\n\n");
         return 0;
     }
-    while ((c = getopt(argc, argv, "23cdepsth")) != -1) {
+    while ((c = getopt(argc, argv, "23cdempsth")) != -1) {
         switch (c) {
         case '2':
             if(argc == 2) {
@@ -158,6 +158,10 @@ int main(int argc, char *argv[])
             data = fopen("./datapoints/ellipse.dat", "r");
             flag = 'e';
             break;
+        case 'm':
+            data = fopen("./datapoints/my_data.dat", "r");
+            flag = 'm';
+            break;
         case 'p':
             if(argc == 2) {
                 printf("\nNumber of datapoints to generate not chosen. See the Help Screen [-h] for more information.\n\nExiting program. Good day.\n\n");
@@ -189,7 +193,7 @@ int main(int argc, char *argv[])
             flag = 't';
             break;
         case 'h':
-            printf("\nHELP SCREEN:\n\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for one circle,\n-2 for two circles,\n-3 for three circles,\n-d for a donut,\n-e for an ellipse,\n-s for a square, or\n-t for a triangle\n\n");
+            printf("\nHELP SCREEN:\n\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for one circle,\n-2 for two circles,\n-3 for three circles,\n-d for a donut,\n-e for an ellipse,\n-p for a cardioid,\n-m for your own dataset (named \"my_data.dat\" and placed in the ./datapoints directory)\n-s for a square, or\n-t for a triangle\n\n");
             printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted. Also GNUplot will not plot datasets less than 10 (it results in a segfault upon fclose()). Thus even though the number of datapoints the algorithm can handle can be any number, this program can only plot datasets greater than 10.\n\n");
             return 0;
         }
@@ -203,9 +207,6 @@ int main(int argc, char *argv[])
     }
     fclose(data);
     point = new struct point_t [size];
-    if(point == NULL) {
-        memory_error();
-    }
     switch(flag) {
         case '2':
             data = fopen("./datapoints/two_circles.dat", "r");
@@ -221,6 +222,9 @@ int main(int argc, char *argv[])
             break;
         case 'e':
             data = fopen("./datapoints/ellipse.dat", "r");
+            break;
+        case 'm':
+            data = fopen("./datapoints/my_data.dat", "r");
             break;
         case 'p':
             data = fopen("./datapoints/cardioid.dat", "r");
