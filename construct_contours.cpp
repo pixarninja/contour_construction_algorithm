@@ -47,6 +47,8 @@
 #include <ctype.h>
 #include <unistd.h>
 
+#include <new>
+
 #define NUM_FILES 4
 
 struct point_t {
@@ -74,7 +76,7 @@ struct curvature_t {
 
 int global_count = 0;
 
-double shortest_path(struct point_t start, int n, struct point_t *search, int *shortest, int size, FILE *gnu_files[NUM_FILES]);
+double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES]);
 double calculate_curvature(struct curvature_t k);
 double calculate_theta(struct curvature_t k);
 double tao_distance(struct curvature_t k);
@@ -84,13 +86,13 @@ double distance_v(struct vector_t start, struct vector_t end);
 double length_v(struct vector_t v);
 double dot_product(struct vector_t start, struct vector_t end);
 void print_k(struct curvature_t k);
+void memory_error(void);
 
 int main(int argc, char *argv[])
 {
     FILE *data;
     FILE *gnu_files[NUM_FILES];
     struct point_t *point;
-    int *shortest;
     char buf[1024];
     char tmp[1024];
     double distance = 0.0;
@@ -200,8 +202,10 @@ int main(int argc, char *argv[])
         size++;
     }
     fclose(data);
-    point = malloc(sizeof(struct point_t) * size);
-    shortest = malloc(sizeof(int) * size);
+    point = new struct point_t [size];
+    if(point == NULL) {
+        memory_error();
+    }
     switch(flag) {
         case '2':
             data = fopen("./datapoints/two_circles.dat", "r");
@@ -250,14 +254,8 @@ int main(int argc, char *argv[])
     fprintf(gnu_files[0], "set title \"Contour Construction Algorithm\"\n");
     fprintf(gnu_files[0], "set style line 1 lc rgb \"black\" lw 1\n");
     /* runs tao-distance algorithm on data */
-    distance = shortest_path(point[start], start, point, shortest, size - 1, gnu_files);
+    distance = shortest_path(point[start], start, point, size - 1, gnu_files);
     printf("\n");
-    /* for printing the path (integer indices)
-    printf("Shortest Path:\n");
-    for(i = 0; i < (size - 1); i++) {
-        printf("%d->", shortest[i]);
-    }
-    printf("%d\n\n", shortest[i]);*/
     printf("Distance: %lf\n\n", distance);
     printf("Total Permutations: %d\n", global_count);
     printf("\n");
@@ -270,7 +268,7 @@ int main(int argc, char *argv[])
 }
 
 /* calculates the shortest path */
-double shortest_path(struct point_t start, int n, struct point_t *search, int *shortest, int size, FILE *gnu_files[NUM_FILES])
+double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES])
 {
     struct vector_t initial;
     struct vector_t check;
@@ -283,7 +281,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     double sum_y = 0.0;
     double theta = DBL_MAX;
     double tmp = 0.0;
-    int *visited = calloc(size, sizeof(int) * size);
+    int *visited = new int [size];
     int i;
     int j;
     int index;
@@ -314,7 +312,7 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
     /* store start index in a visted-array */
     visited[start.index] = 1;
     /* initializing structure curr */
-    struct point_t *curr = malloc(sizeof(struct point_t) * size);
+    struct point_t *curr = new struct point_t [size];
     for(i = 0; i <= size; i++) {
         curr[i].x = DBL_MAX;
         curr[i].y = DBL_MAX;
@@ -540,7 +538,6 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
             continue;
         }
         visited[n] = 1;
-        shortest[global_count] = start.index;
         total += distance_p(start, best);
         /* plot */
         fprintf(gnu_files[2], "%lf %lf %d\n", best.x, best.y, best.index);
@@ -597,7 +594,6 @@ double shortest_path(struct point_t start, int n, struct point_t *search, int *s
         count = 0;
         global_count++;
     }
-    shortest[global_count] = best.index;
     /* final point */
     fprintf(gnu_files[2], "%lf %lf %d\n", end.x, end.y, end.index);
     total += distance_p(best, end);
@@ -680,4 +676,10 @@ void print_k(struct curvature_t k)
     printf("angle = %lf; ", k.theta * 180 / M_PI);
     printf("tao = %lf; ", k.tao);
     printf("tao-distance = %lf\n\n", k.V.point[1].tao_d);
+}
+
+/* prints to the terminal if there is an error assigning memory */
+void memory_error(void)
+{
+    printf("\n\nError assigning memory. Exiting Program. Good Day.\n\n");
 }
