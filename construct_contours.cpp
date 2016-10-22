@@ -29,7 +29,7 @@ int global_count = 0;
 double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES]);
 double calculate_curvature(struct vector_t T1, struct vector_t T2, double tao);
 double calculate_theta(double tao);
-double tao_distance(struct vector_t V, double curvature);
+double tao_distance(struct vector_t V, double curvature, double theta);
 double angle_v(struct vector_t V1, struct vector_t V2);
 double distance_p(struct point_t start, struct point_t end);
 double distance_v(struct vector_t V1, struct vector_t V2);
@@ -381,7 +381,7 @@ double shortest_path(struct point_t start, int n, struct point_t *points, int si
             curr[i].y = V.point[1].y;
             curr[i].index = V.point[1].index;
             /* calculating tao-distance */
-            curr[i].tao_d = tao_distance(V, curvature);
+            curr[i].tao_d = tao_distance(V, curvature, theta);
             V.point[1].tao_d = curr[i].tao_d;
             /* for debugging tao-distance function
             print(V, T1, T2, curvature, theta, tao);*/
@@ -569,9 +569,9 @@ double calculate_theta(double tao)
 }
 
 /* calculates distance given index and structure */
-double tao_distance(struct vector_t V, double curvature)
+double tao_distance(struct vector_t V, double curvature, double theta)
 {
-    return (V.length + curvature);
+    return (V.length + curvature + theta);
 }
 
 /* calculates angle between two vectors */
