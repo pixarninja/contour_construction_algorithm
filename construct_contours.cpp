@@ -571,7 +571,8 @@ double calculate_theta(double tao)
 /* calculates distance given index and structure */
 double tao_distance(struct vector_t V, double curvature, double theta)
 {
-    return (V.length + curvature + theta);
+    //return (V.length + curvature + theta);
+    return (V.length + curvature + (theta * M_PI / 4) - 1);
 }
 
 /* calculates angle between two vectors */
