@@ -1,6 +1,24 @@
 Contour Construction Algorithm
 ==============================
 
+How to Use:
+-----------
+
+Enter one of the following flags, followed by the number of datapoints
+to generate around the shape:
+
+O. -c for one circle
+O. -2 for two circles
+O. -3 for three circles
+O. -d for a donut
+O. -e for an ellipse
+O. -p for a cardioid
+O. -m for your own dataset (named \"my_data.dat\" and placed in the ./datapoints directory)
+O. -s for a square
+O. -t for a triangle
+
+Please note: the GNUplot plotting utility must be installed for the path to be plotted.
+
 Brief:
 ------
 
