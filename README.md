@@ -32,12 +32,29 @@ contain points "inside" them.
 
 TODO:
 
-My goal with this algorithm is to be able to reconstruct a planar,
-convex
+My goal with this algorithm is to be able to reconstruct a planar, convex
 shape given only its vertices. I have achieved this goal, as proven
 by the various test cases (which are set as flags) for the program.
 The next step is to write a MEL or C++ script as a plugin for
 Autodesk Maya, implementing this algorithm to construct (or re-
-construct) 3D polygons. Some applications of this would be
+construct) 3-dimensional meshes.
+
+APPLICATIONS:
+
+Some applications of this algorithm would be
+the construction of 3-dimensional meshes from photographic references,
 polarization of U/V components on objects (both polygons and NURBS),
 or dynamic modeling of polygons at rendertime.
+
+There are other applications not involving 3D Graphics;
+because this algorithm calculates the shortest path between a set of
+vertices that are known to be convex, it is a "solution"
+to the Traveling Salesman Problem under very specific conditions.
+My work for completing an algorithm that solves the TSP for
+any set of data points can be found in my "Shortest Path
+Algorithm" repository (https://github.com/pixarninja/shortest_path_algorithm).
+My work on the TSP uses concepts discovered through my work with
+the Contour Construction Algorithm. My goal
+with the Shortest Path Alogrithm is to be able to write
+programs that complete all of the above applications, for any
+3-dimensional set of datapoints.
