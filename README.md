@@ -7,15 +7,15 @@ How to Use:
 Enter one of the following flags, followed by the number of datapoints
 to generate around the shape:
 
-O. -c for one circle
-O. -2 for two circles
-O. -3 for three circles
-O. -d for a donut
-O. -e for an ellipse
-O. -p for a cardioid
-O. -m for your own dataset (named \"my_data.dat\" and placed in the ./datapoints directory)
-O. -s for a square
-O. -t for a triangle
+0. -c for one circle
+0. -2 for two circles
+0. -3 for three circles
+0. -d for a donut
+0. -e for an ellipse
+0. -p for a cardioid
+0. -m for your own dataset (named \"my_data.dat\" and placed in the ./datapoints directory)
+0. -s for a square
+0. -t for a triangle
 
 Please note: the GNUplot plotting utility must be installed for the path to be plotted.
 
