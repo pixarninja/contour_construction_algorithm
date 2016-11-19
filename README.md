@@ -26,9 +26,9 @@ This algorithm calculates the shortest path between a set of data
 using only curvature. I have named this method of distance computation
 "Tao Distance", because it deals with calculating a constant defined
 below:
-
-		Tao = dot_product(T1, T2)/(T1.length * T2.length)
-
+```
+Tao = dot_product(T1, T2)/(T1.length * T2.length)
+```
 T1 and T2 are unit tangent vectors calculated by the program. But since
 the length of a unit vector is 1, we can write Tao as:
 
