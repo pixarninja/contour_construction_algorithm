@@ -44,7 +44,7 @@ APPLICATIONS:
 Some applications of this algorithm would be
 the construction of 3-dimensional meshes from photographic references,
 polarization of U/V components on objects (both polygons and NURBS),
-or dynamic modeling of polygons at rendertime.
+and dynamic modeling of polygons at rendertime.
 
 There are other applications not involving 3D Graphics;
 because this algorithm calculates the shortest path between a set of
