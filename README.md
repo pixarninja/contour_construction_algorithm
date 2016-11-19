@@ -10,7 +10,7 @@ below:
 		Tao = dot_product(T1, T2)/(T1.length * T2.length)
 
 T1 and T2 are unit tangent vectors calculated by the program. But since
-the length of a unit vector is 1, we can write tao as:
+the length of a unit vector is 1, we can write Tao as:
 
 		Tao = dot_product(T1, T2)
 
@@ -19,7 +19,7 @@ vector (T2 - T1) divided by the angle between T2 and T1. Tao
 is used to simplify the calculation of the angle between the two unit
 tangent vectors. The final Tao-Distance Equation is defined below:
 
-		Tao-Distance = V.length + curvature
+		Tao-Distance = V.length + curvature + theta
 
 Thus the program calculates this distance for each possibility,
 chooses the point with the smallest Tao Distance, and builds the
@@ -32,7 +32,8 @@ contain points "inside" them.
 
 TODO:
 
-My goal with this algorithm is to be able to reconstruct a planar
+My goal with this algorithm is to be able to reconstruct a planar,
+convex
 shape given only its vertices. I have achieved this goal, as proven
 by the various test cases (which are set as flags) for the program.
 The next step is to write a MEL or C++ script as a plugin for

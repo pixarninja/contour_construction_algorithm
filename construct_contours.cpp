@@ -26,7 +26,7 @@ struct vector_t {
 
 int global_count = 0;
 
-double shortest_path(struct point_t start, int n, struct point_t *search, int size, FILE *gnu_files[NUM_FILES]);
+double shortest_path(struct point_t start, int n, struct point_t *points, int size, FILE *gnu_files[NUM_FILES], int range);
 double calculate_curvature(struct vector_t T1, struct vector_t T2, double tao);
 double calculate_theta(double tao);
 double tao_distance(struct vector_t V, double curvature, double theta);
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
             break;
         case 'h':
             printf("\nHELP SCREEN:\n\nEnter one of the following flags, followed by the number of datapoints to generate around the shape:\n\n-c for one circle,\n-2 for two circles,\n-3 for three circles,\n-d for a donut,\n-e for an ellipse,\n-p for a cardioid,\n-m for your own dataset (named \"my_data.dat\" and placed in the ./datapoints directory)\n-s for a square, or\n-t for a triangle\n\n");
-            printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted. Also GNUplot will not plot datasets less than 10 (it results in a segfault upon fclose()). Thus even though the number of datapoints the algorithm can handle can be any number, this program can only plot datasets greater than 10.\n\n");
+            printf("NOTE: the GNUplot plotting utility must be installed for the path to be plotted.\n\n");
             return 0;
         }
     }
@@ -201,14 +201,14 @@ int main(int argc, char *argv[])
         fprintf(gnu_files[1], "%lf %lf %d\n", point[i].x, point[i].y, point[i].index);
     }
     /* plot setup */
-    fprintf(gnu_files[0], "set xrange [%lf:%lf]\n", -(range + 1), range + 1);
-    fprintf(gnu_files[0], "set yrange [%lf:%lf]\n", -(range + 1), range + 1);
+    //fprintf(gnu_files[0], "set xrange [%lf:%lf]\n", -(range + 1), range + 1);
+    //fprintf(gnu_files[0], "set yrange [%lf:%lf]\n", -(range + 1), range + 1);
     fprintf(gnu_files[0], "set size ratio 1\n");
     fprintf(gnu_files[0], "set grid\n");
     fprintf(gnu_files[0], "set title \"Contour Construction Algorithm\"\n");
     fprintf(gnu_files[0], "set style line 1 lc rgb \"black\" lw 1\n");
     /* runs tao-distance algorithm on data */
-    distance = shortest_path(point[start], start, point, size, gnu_files);
+    distance = shortest_path(point[start], start, point, size, gnu_files, range);
     printf("\n");
     printf("Distance: %lf\n\n", distance);
     printf("Total Permutations: %d\n", global_count);
@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
 }
 
 /* calculates the shortest path */
-double shortest_path(struct point_t start, int n, struct point_t *points, int size, FILE *gnu_files[NUM_FILES])
+double shortest_path(struct point_t start, int n, struct point_t *points, int size, FILE *gnu_files[NUM_FILES], int range)
 {
     struct point_t *curr = new struct point_t [size];
     struct point_t *search = new struct point_t [size];
@@ -271,6 +271,9 @@ double shortest_path(struct point_t start, int n, struct point_t *points, int si
     }
     center.x = sum_x / size;
     center.y = sum_y / size;
+    /* center plot */
+    fprintf(gnu_files[0], "set xrange [%lf:%lf]\n", -(range + 1) + center.x, range + 1 + center.x);
+    fprintf(gnu_files[0], "set yrange [%lf:%lf]\n", -(range + 1) + center.y, range + 1 + center.y);
     /* initialize initial vector */
     initial.point[0].x = start.x;
     initial.point[0].y = start.y;
@@ -549,6 +552,7 @@ double shortest_path(struct point_t start, int n, struct point_t *points, int si
     /* final point */
     fprintf(gnu_files[2], "%lf %lf %d\n", end.x, end.y, end.index);
     total += distance_p(best, end);
+    global_count--;
     /* plot */
     fprintf(gnu_files[0], "plot './gnu_files/lines.tmp' using 1:2 with lines ls 1 title \"shortest path\",");
     fprintf(gnu_files[0], "'./gnu_files/points.tmp' using 1:2 with points pt 7 notitle,");
@@ -571,8 +575,7 @@ double calculate_theta(double tao)
 /* calculates distance given index and structure */
 double tao_distance(struct vector_t V, double curvature, double theta)
 {
-    //return (V.length + curvature + theta);
-    return (V.length + curvature + (theta * 4 / M_PI) - 1);
+    return (V.length + curvature + theta);
 }
 
 /* calculates angle between two vectors */
