@@ -1,6 +1,8 @@
 Contour Construction Algorithm
+==============================
 
-BRIEF:
+Brief:
+------
 
 This algorithm calculates the shortest path between a set of data
 using only curvature. I have named this method of distance computation
@@ -29,8 +31,12 @@ This program is designed to work for "round datasets", meaning the
 optimal solution will be a convex shape. This algorithm is less
 accurate for shapes that have concave features, or for shapes that
 contain points "inside" them.
+The Time Complexity of this algorithm,
+given that the dataset follows the above restrictions,
+is O(n^2).
 
 TODO:
+-----
 
 My goal with this algorithm is to be able to reconstruct a planar, convex
 shape given only its vertices. I have achieved this goal, as proven
@@ -39,7 +45,8 @@ The next step is to write a MEL or C++ script as a plugin for
 Autodesk Maya, implementing this algorithm to construct (or re-
 construct) 3-dimensional meshes.
 
-APPLICATIONS:
+Applications:
+-------------
 
 Some applications of this algorithm would be
 the construction of 3-dimensional meshes from photographic references,
