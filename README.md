@@ -4,7 +4,7 @@ Contour Construction Algorithm
 Usage:
 ------
 
-```
+```ruby
 make
 ./construct_contours [flag] [number of datapoints]
 ```
