@@ -1,10 +1,8 @@
-Contour Construction Algorithm
-==============================
+#Contour Construction Algorithm
 
-Usage:
-------
+##Usage:
 
-```ruby
+```
 make
 ./construct_contours [flag] [number of datapoints]
 ```
@@ -23,28 +21,21 @@ to generate around the shape:
 
 Please note: the GNUplot plotting utility must be installed for the path to be plotted.
 
-Brief:
-------
+##Brief:
 
 This algorithm calculates the shortest path between a set of data
 using only curvature. I have named this method of distance computation
 "Tao Distance", because it deals with calculating a constant defined
 below:
-```
-Tao = dot_product(T1, T2)/(T1.length * T2.length)
-```
+*Tao = dot_product(T1, T2)/(T1.length * T2.length)*
 T1 and T2 are unit tangent vectors calculated by the program. But since
 the length of a unit vector is 1, we can write Tao as:
-```
-Tao = dot_product(T1, T2)
-```
+*Tao = dot_product(T1, T2)*
 We then calculate curvature by using the length of the displacement
 vector (T2 - T1) divided by the angle between T2 and T1. Tao
 is used to simplify the calculation of the angle between the two unit
 tangent vectors. The final Tao-Distance Equation is defined below:
-```
-Tao-Distance = V.length + curvature + theta
-```
+*Tao-Distance = V.length + curvature + theta*
 Thus the program calculates this distance for each possibility,
 chooses the point with the smallest Tao Distance, and builds the
 path without having to compare the found path with any others.
@@ -57,8 +48,7 @@ The Time Complexity of this algorithm,
 given that the dataset follows the above restrictions,
 is O(n^2).
 
-TODO:
------
+##TODO:
 
 My goal with this algorithm is to be able to reconstruct a planar, convex
 shape given only its vertices. I have achieved this goal, as proven
@@ -67,8 +57,7 @@ The next step is to write a MEL or C++ script as a plugin for
 Autodesk Maya, implementing this algorithm to construct (or re-
 construct) 3-dimensional meshes.
 
-Applications:
--------------
+##Applications:
 
 Some applications of this algorithm would be
 the construction of 3-dimensional meshes from photographic references,
