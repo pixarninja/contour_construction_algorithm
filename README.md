@@ -23,7 +23,7 @@ Please note: the GNUplot plotting utility must be installed for the path to be p
 
 ##Brief:
 
-This algorithm calculates the shortest path between a set of data
+This algorithm calculates the shortest path between a set of datapoints
 using only curvature. I have named this method of distance computation
 "Tao Distance", because it deals with calculating a constant defined
 below:
@@ -52,7 +52,7 @@ accurate for shapes that have concave features, or for shapes that
 contain points "inside" them.
 The Time Complexity of this algorithm,
 given that the dataset follows the above restrictions,
-is O(n^2).
+is *O(n<sup>2</sup>)*.
 
 ##TODO:
 
@@ -67,7 +67,7 @@ construct) 3-dimensional meshes.
 
 Some applications of this algorithm would be
 the construction of 3-dimensional meshes from photographic references,
-polarization of U/V components on objects (both polygons and NURBS),
+polarization of U/V components of objects (both polygons and NURBS),
 and dynamic modeling of polygons at rendertime.
 
 There are other applications not involving 3D Graphics;
@@ -77,8 +77,8 @@ to the Traveling Salesman Problem under very specific conditions.
 My work for completing an algorithm that solves the TSP for
 any set of data points can be found in my "Shortest Path
 Algorithm" repository (https://github.com/pixarninja/shortest_path_algorithm).
-My work on the TSP uses concepts discovered through my work with
-the Contour Construction Algorithm. My goal
+My work on the TSP uses concepts discovered through working on
+the Contour Construction Algorithm, however a much different approach. My goal
 with the Shortest Path Alogrithm is to be able to write
-programs that complete all of the above applications, for any
+programs to complete all of the above applications, for any
 3-dimensional set of datapoints.
