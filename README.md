@@ -52,7 +52,7 @@ accurate for shapes that have concave features, or for shapes that
 contain points "inside" them.
 The Time Complexity of this algorithm,
 given that the dataset follows the above restrictions,
-is *O(n<sup>2</sup>)*.
+is O(n<sup>2</sup>).
 
 ##TODO:
 
