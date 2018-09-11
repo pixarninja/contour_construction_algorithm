@@ -25,25 +25,25 @@ Please note: the GNUplot plotting utility must be installed for the path to be p
 
 This algorithm calculates the shortest path between a set of datapoints
 using only curvature. I have named this method of distance computation
-"Tao Distance", because it deals with calculating a constant defined
+"tao distance", because it deals with calculating a constant defined
 below:
 ```
-Tao = dot_product(T1, T2)/(T1.length * T2.length)
+tao = dot_product(T1, T2)/(T1.length * T2.length)
 ```
 Vectors T1 and T2 are unit tangent vectors calculated by the program. But since
-the length of a unit vector is 1, we can write Tao as:
+the length of a unit vector is 1, we can write tao as:
 ```
-Tao = dot_product(T1, T2)
+tao = dot_product(T1, T2)
 ```
 We then calculate curvature by using the length of the displacement
 vector (T2 - T1) divided by the angle between T2 and T1. Given the previously
-stated equivalence, Tao can be used to simplify the calculation of the angle between the two unit
-tangent vectors. The final Tao-Distance Equation is defined below:
+stated equivalence, tao can be used to simplify the calculation of the angle between the two unit
+tangent vectors. The final tao-distance Equation is defined below:
 ```
-Tao-Distance = V.length + curvature + theta
+tao-distance = V.length + curvature + theta
 ```
 Thus the program calculates this distance for each possibility,
-chooses the point with the smallest Tao-Distance, and builds the
+chooses the point with the smallest tao-distance, and builds the
 path without having to compare the found path with any others.
 
 This program is designed to work for "convex datasets", meaning the
